@@ -77,6 +77,12 @@ button,select{font:inherit;color:inherit}
 .l1{background:#2f9e44}.l2{background:#e0a100;color:#1d1400!important}.l3{background:#c92a2a}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
+/* Cartel de versión nueva */
+.upd{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:10;display:none;align-items:center;gap:12px;padding:12px 12px 12px 20px;border-radius:18px;background:var(--wri);color:#fff;font-size:20px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.3);width:max-content;max-width:calc(100% - 32px)}
+.upd.show{display:flex}
+.upd button{border:0;border-radius:14px;min-height:56px;padding:0 20px;font-size:20px;font-weight:700;cursor:pointer}
+.upd .go{background:#fff;color:var(--wri)}
+.upd .x{background:transparent;color:#fff;font-size:26px;padding:0 12px}
 /* Escribir: línea arriba, palabras sugeridas, teclado grande */
 .wr{display:flex;flex-direction:column;gap:10px}
 .wline{display:flex;gap:10px;align-items:stretch}
@@ -145,6 +151,7 @@ button,select{font:inherit;color:inherit}
   <main id="screen"></main>
 </div>
 <div class="toast" id="toast"></div>
+<div class="upd" id="upd" role="status"><span>Hay una versión nueva</span><button class="go" id="updgo">Actualizar</button><button class="x" id="updx" aria-label="Ahora no">✕</button></div>
 <script>
 {
 const face=(m,c)=>{const M={contenta:'M34 62 Q50 76 66 62',tranquila:'M36 63 Q50 72 64 63',triste:'M34 70 Q50 58 66 70',enojada:'M34 70 Q50 60 66 70',asustada:'',cansada:'M38 66 L62 66',confundida:'M34 66 Q42 60 50 66 Q58 72 66 66',preocupada:'M36 69 Q50 63 64 69',poco:'M36 63 Q50 72 64 63',bastante:'M36 66 L64 66',mucho:'M34 72 Q50 58 66 72'};
@@ -325,7 +332,18 @@ document.addEventListener('click',keepAwake);
 keepAwake();
 }
 /* Guarda la app en la tablet para que ande sin internet */
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* Cuando se publica una versión nueva, aparece el cartel "Hay una versión nueva" */
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+ const had=!!navigator.serviceWorker.controller,upd=document.getElementById('upd');
+ navigator.serviceWorker.register('sw.js').then(reg=>{
+  const check=()=>reg.update().catch(()=>{});
+  setInterval(check,30*60*1000);                       // la app queda abierta días: se fija cada media hora
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
+ }).catch(()=>{});
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(had)upd.classList.add('show')});
+ document.getElementById('updgo').onclick=()=>location.reload();
+ document.getElementById('updx').onclick=()=>upd.classList.remove('show');
+}
 </script>
 </body>
 </html>
