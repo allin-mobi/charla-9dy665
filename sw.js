@@ -1,7 +1,7 @@
 // Guarda la app en la tablet para que ande aunque se corte el Wi-Fi.
 // Primero intenta la versión nueva de internet; si no hay conexión, usa la guardada.
 // También muestra los avisos (push) en el celular de la familia aunque la página esté cerrada.
-const CACHE = 'hablemos-v10';
+const CACHE = 'hablemos-v11';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable.png', './familia.html', './familia.webmanifest'];
 
 self.addEventListener('install', (e) => {

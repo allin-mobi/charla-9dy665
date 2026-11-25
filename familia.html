@@ -102,7 +102,9 @@ const chat=()=>{document.getElementById('cambiar').hidden=false;
  tx.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!/Android|iPhone|iPad/i.test(navigator.userAgent)){e.preventDefault();document.getElementById('fm').requestSubmit()}};
  tx.oninput=()=>{tx.style.height='';tx.style.height=Math.min(tx.scrollHeight,140)+'px'};
  document.querySelector('.quick').onclick=e=>{const b=e.target.closest('[data-q]');if(b)mandar(b.dataset.q)};
- pintar.primera=true;pintar();traer();avisosUI()};
+ pintar.primera=true;pintar();traer();avisosUI();limpiarAvisos()};
+/* Al abrir el chat se borran los avisos que quedaron en el celular (ya se están leyendo los mensajes) */
+const limpiarAvisos=()=>{try{navigator.serviceWorker&&navigator.serviceWorker.getRegistration().then(r=>r&&r.getNotifications().then(ns=>ns.forEach(n=>n.close()))).catch(()=>{});navigator.clearAppBadge&&navigator.clearAppBadge().catch(()=>{})}catch(e){}};
 
 /* ===== Avisos en el celular (push): suenan aunque la página esté cerrada ===== */
 const VAPID='BCv5NAfisKyhxYGXuukr0ETwCE4d8iGW7LJMdoBTBnt9nX4wj4CLpPT68imhgj_USh14kq3k9-8ehVNDzUitSyg';
@@ -130,7 +132,7 @@ const avisosUI=async()=>{const on=await activos(),btn=document.getElementById('a
 if('serviceWorker' in navigator&&location.protocol==='https:')reg().catch(()=>{});
 
 document.getElementById('cambiar').onclick=pedirNombre;
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){nuevosOcultos=0;document.title='Hablemos · Familia';traer()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){nuevosOcultos=0;document.title='Hablemos · Familia';traer();if(nombre()&&sala.length>=20)limpiarAvisos()}});
 setInterval(()=>{if(nombre()&&sala.length>=20)traer()},10000);
 
 if(sala.length<20){app.innerHTML='<div class="card"><h2>Este link no está completo</h2><p style="margin:0">Pedile a quien te lo pasó que lo mande de nuevo desde la tablet: ⚙ Ajustes → 📲 Link para la familia.</p></div>'}
