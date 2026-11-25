@@ -23,7 +23,7 @@
 :root{color-scheme:light;--bg:#fbfaf7;--ink:#17181a;--soft:#efede8;--line:#dcd9d2}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#121314;--ink:#f3f3f1;--soft:#202224;--line:#34373a}}
 :root[data-theme=dark]{color-scheme:dark;--bg:#121314;--ink:#f3f3f1;--soft:#202224;--line:#34373a}
-:root{--yes:#1e9e50;--no:#d7302f;--unk:#6b7076;--pain:#ec6a12;--feel:#7a4fe0;--need:#1b74d1;--ppl:#0d8a8a;--fra:#c42a6b;--help:#ffb100}
+:root{--yes:#1e9e50;--no:#d7302f;--unk:#6b7076;--pain:#ec6a12;--feel:#7a4fe0;--need:#1b74d1;--ppl:#0d8a8a;--fra:#c42a6b;--help:#ffb100;--wri:#4554b8}
 *{box-sizing:border-box;min-width:0}
 html,body{height:100%}
 /* Tablet: sin zoom por doble toque, sin selección de texto al mantener el dedo, sin "tirar para recargar" */
@@ -77,6 +77,28 @@ button,select{font:inherit;color:inherit}
 .l1{background:#2f9e44}.l2{background:#e0a100;color:#1d1400!important}.l3{background:#c92a2a}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
+/* Escribir: línea arriba, palabras sugeridas, teclado grande */
+.wr{display:flex;flex-direction:column;gap:10px}
+.wline{display:flex;gap:10px;align-items:stretch}
+.wline .back{flex:none}
+.wtext{flex:1;min-height:80px;max-height:150px;overflow-y:auto;display:flex;align-items:center;flex-wrap:wrap;padding:8px 16px;border-radius:18px;background:var(--bg);border:3px solid var(--wri);font-size:clamp(26px,3.6vw,40px);font-weight:700;line-height:1.15;word-break:break-word}
+.wtext.empty{color:color-mix(in srgb,var(--ink) 40%,transparent);font-weight:400}
+.caret{display:inline-block;width:3px;height:1.05em;background:var(--wri);margin-left:2px;vertical-align:-.12em;animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{opacity:0}}
+.sug{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-height:62px}
+.sug button{border:2px solid color-mix(in srgb,var(--wri) 55%,var(--line));background:color-mix(in srgb,var(--wri) 10%,var(--bg));border-radius:14px;min-height:62px;font-size:clamp(20px,2.6vw,28px);font-weight:700;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 8px}
+.kb{display:flex;flex-direction:column;gap:8px}
+.kr{display:flex;gap:8px}
+.k{flex:1;min-height:clamp(54px,11.5vh,110px);border:0;border-radius:14px;background:var(--soft);color:var(--ink);font-size:clamp(24px,3.4vw,40px);font-weight:700;cursor:pointer;box-shadow:inset 0 -4px 0 rgba(0,0,0,.14);padding:0}
+.k:active{background:var(--line);transform:scale(.97)}
+.k.p{background:color-mix(in srgb,var(--wri) 16%,var(--soft))}
+.k.del{flex:1.6}
+.k.sp{flex:5;font-size:clamp(18px,2.2vw,24px)}
+.k.clr{flex:2;font-size:clamp(16px,2vw,22px)}
+.k.clr.warn{background:var(--no);color:#fff}
+.k.play{flex:3;background:var(--yes);color:#fff;font-size:clamp(22px,3vw,34px)}
+[data-hc="1"] .k{border:2px solid #fff;box-shadow:none}
+[data-hc="1"]{--wri:#8c9eff}
 /* Editor de personas */
 .pbtn{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 14px;min-height:36px;cursor:pointer;font-weight:700}
 .pl{display:flex;flex-direction:column;gap:10px}
@@ -138,7 +160,7 @@ const CATS={
  personas:{t:'Quiero ver a…',c:'--ppl',note:'Para poner los nombres de la familia: ⚙ Ajustes → Editar personas.',items:[['Mi hijo','👨'],['Mi hija','👩'],['Mi esposo','👴'],['Mis nietos','🧒'],['Mi hermana','👵'],['La enfermera','👩‍⚕️'],['El médico','🩺'],['Una amiga','💐']]},
  frases:{t:'Frases',c:'--fra',items:[['Gracias','🙏'],['Te quiero','❤️'],['Estoy bien','👌'],['No entiendo','❓'],['Más despacio','🐢'],['Esperá','✋'],['Quiero descansar','😌'],['¿Qué día es hoy?','📅'],['Quiero ir a casa','🏠'],['No estoy segura','〰️']]}
 };
-const MAIN=[['dolor','Dolor','🤕','--pain'],['sentir','Me siento','f:contenta:#ffd43b','--feel'],['necesito','Necesito','🙋‍♀️','--need'],['personas','Personas','👨‍👩‍👧','--ppl',3],['frases','Frases','💬','--fra',3]];
+const MAIN=[['dolor','Dolor','🤕','--pain'],['sentir','Me siento','f:contenta:#ffd43b','--feel'],['necesito','Necesito','🙋‍♀️','--need'],['escribir','Escribir','⌨️','--wri'],['personas','Personas','👨‍👩‍👧','--ppl',3],['frases','Frases','💬','--fra',3]];
 const LVINFO={1:'Nivel 1: Sí / No y lo esencial (dolor de frente, 4 sentimientos, 6 necesidades), con botones extra grandes.',2:'Nivel 2: suma "No sé", más sentimientos y necesidades, dolor de espaldas y zonas como garganta u ojos.',3:'Nivel 3: todo, incluidas Personas y Frases.'};
 
 const $=s=>document.querySelector(s),scr=$('#screen'),ph=$('#phrase');
@@ -192,9 +214,80 @@ const pain=()=>{if(lvl<2)view='frente';const back=view==='espalda',parts=FRONT.m
  <h2>¿Cuánto duele?</h2><div class="lv">${lv.map(([l,f,c])=>tile(l,'f:'+f+':#fff',c==='l1'?'--yes':c==='l3'?'--no':'--help',`data-lvl="${l}"`,c)).join('')}</div>
  <p class="note">${where?'Tocá cuánto le duele '+where+'.':'Primero tocá en la figura dónde duele.'}</p></div></div></div>`};
 
-const go=k=>{scr.dataset.view=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else list(k);window.scrollTo(0,0)};
+/* ===== Escribir: teclado grande con palabras sugeridas ===== */
+// Palabras comunes, de más a menos usadas (el orden decide cuál se sugiere primero)
+const WORDS=('que no sí me quiero tengo estoy el la de y a en un una es mi por con para lo te se mucho poco más bien mal ' +
+ 'agua baño dolor duele ayuda favor gracias hola chau ahora después hoy mañana ayer noche día casa cama comer tomar dormir ' +
+ 'ir ver venir llamar hablar ayudar levantar sentar acostar bañar cambiar abrir cerrar prender apagar subir bajar ' +
+ 'necesito puedo podés querés tenés estás está están vení andá traeme dame decile llamá esperá mirá escuchá ' +
+ 'cansada cansado triste contenta contento enojada asustada preocupada tranquila mareada sola frío calor sed hambre miedo sueño ' +
+ 'cabeza panza pecho espalda brazo pierna mano pie garganta ojos boca oídos cuello rodilla hombro ' +
+ 'médico doctor enfermera remedio remedios pastilla almohada manta frazada ropa anteojos teléfono tele radio luz ventana puerta silla ' +
+ 'hijo hija hijos esposo esposa marido nieto nieta nietos hermana hermano mamá papá amiga amigo familia ' +
+ 'dónde cuándo cómo qué quién cuánto cuántos porque pero también todavía ya nunca siempre otra otro vez acá allá ' +
+ 'te quiero los las del al su sus esto eso este esta todo nada algo alguien ' +
+ 'despacio rápido fuerte más bajo arriba abajo afuera adentro cerca lejos ' +
+ 'gracias perdón disculpá entiendo entendés sé sabés acuerdo recuerdo olvidé quiero tengo voy vas va vamos ' +
+ 'comida desayuno almuerzo merienda cena café mate té leche jugo pan fruta sopa ' +
+ 'caminar pasear salir volver descansar duchar peinar lavar ' +
+ 'lunes martes miércoles jueves viernes sábado domingo hora horas temprano tarde ' +
+ 'bueno buena bueno lindo linda feo mejor peor igual raro').split(' ');
+const NEXT={quiero:['ir','agua','dormir','ver','comer','descansar'],tengo:['sed','hambre','frío','calor','dolor','miedo'],me:['duele','siento','quiero','gusta','pica'],
+ estoy:['bien','cansada','mal','triste','mareada'],no:['quiero','puedo','sé','entiendo','me','tengo'],necesito:['ayuda','ir','agua','el','la','mis'],
+ por:['favor','qué'],dónde:['está','están','estoy'],cuándo:['vamos','viene','vienen'],ir:['al','a','a la'],al:['baño','médico'],
+ a:['la','casa','dormir','comer'],la:['cama','tele','luz','ventana','puerta'],el:['teléfono','médico','agua','baño','control'],mis:['anteojos','remedios','hijos','nietos'],
+ duele:['la','el','mucho','poco'],muy:['bien','mal','cansada'],quién:['viene','es','está'],qué:['hora','día','pasa','hacés'],te:['quiero','extraño']};
+const START=['quiero','tengo','me','no','necesito','estoy','gracias','dónde'];
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const cap1=s=>s.charAt(0).toUpperCase()+s.slice(1);
+let txt=store('borrador')||'',clrArm=0,learn={};
+try{learn=JSON.parse(store('palabras')||'{}')||{}}catch(e){}
+const saveTxt=()=>store('borrador',txt);
+const cur=()=>txt.match(/([^\s,.?¿]*)$/)[1];
+const before=()=>txt.slice(0,txt.length-cur().length);
+const prevWord=()=>{const b=before();if(/[.?]\s*$/.test(b)||!b.trim())return '';const w=b.trim().split(/[\s,.?¿]+/).filter(Boolean);return (w[w.length-1]||'').toLowerCase()};
+const dict=()=>{const m=new Map();WORDS.forEach((w,i)=>{if(!m.has(norm(w)))m.set(norm(w),{w,s:1000-i})});
+ CATS.personas.items.forEach(([n])=>String(n).split(/\s+/).forEach(w=>{w=w.replace(/[^\p{L}]/gu,'');if(w&&!m.has(norm(w)))m.set(norm(w),{w,s:950})}));
+ for(const k in learn){if(k.includes(' '))continue;const e=m.get(norm(k))||{w:k,s:0};e.s+=learn[k]*300;m.set(norm(k),e)}return m};
+const suggest=()=>{const c=norm(cur()),D=dict(),out=[],add=w=>{if(w&&!out.some(x=>norm(x)===norm(w))&&out.length<4)out.push(w)};
+ if(c){[...D.values()].filter(e=>norm(e.w).startsWith(c)&&e.w!==cur()).sort((a,b)=>b.s-a.s).forEach(e=>add(e.w))}
+ else{const p=prevWord();
+  if(p){Object.keys(learn).filter(k=>k.startsWith(p+' ')).sort((a,b)=>learn[b]-learn[a]).forEach(k=>add(k.slice(p.length+1)));(NEXT[norm(p)]||NEXT[p]||[]).forEach(add)}
+  else START.forEach(add);
+  [...D.values()].sort((a,b)=>b.s-a.s).forEach(e=>add(e.w))}
+ return out};
+const capT=t=>t.replace(/(^\s*¿?|[.?]\s+¿?)(\p{Ll})/gu,(m,a,b)=>a+b.toUpperCase());
+const learnFrom=t=>{t.toLowerCase().split(/[.?]+/).forEach(s=>{const w=s.split(/[\s,¿]+/).filter(x=>x.length>1);
+ w.forEach((x,i)=>{learn[x]=(learn[x]||0)+1;if(i)learn[w[i-1]+' '+x]=(learn[w[i-1]+' '+x]||0)+1})});
+ const ks=Object.keys(learn);if(ks.length>3000)ks.sort((a,b)=>learn[a]-learn[b]).slice(0,ks.length-3000).forEach(k=>delete learn[k]);
+ store('palabras',JSON.stringify(learn))};
+const KROWS=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l','ñ'],['z','x','c','v','b','n','m',',','.','?','⌫']];
+const write=()=>{scr.innerHTML=`<div class="wr"><div class="wline"><button class="back" data-go="home">← Inicio</button><div class="wtext" id="wtext" aria-live="polite"></div></div>
+ <div class="sug" id="sug"></div>
+ <div class="kb">${KROWS.map(r=>`<div class="kr">${r.map(k=>`<button class="k${/[,.?]/.test(k)?' p':''}${k==='⌫'?' del':''}" data-k="${k}" aria-label="${k==='⌫'?'Borrar letra':k}">${k==='⌫'?'⌫':k.toUpperCase()}</button>`).join('')}</div>`).join('')}
+ <div class="kr"><button class="k clr" data-k="clr">Borrar todo</button><button class="k sp" data-k=" " aria-label="Espacio">espacio</button><button class="k play" data-k="play">▶ Decir</button></div></div></div>`;wrender()};
+const wrender=()=>{const w=$('#wtext');if(!w)return;
+ w.classList.toggle('empty',!txt);w.innerHTML=txt?`<span style="white-space:pre-wrap">${esc(capT(txt))}</span><span class="caret"></span>`:'<span class="caret"></span>&nbsp;Escribí con las letras de abajo';
+ w.scrollTop=w.scrollHeight;const st=!prevWord();
+ $('#sug').innerHTML=suggest().map(s=>`<button data-sug="${esc(s)}">${esc(st?cap1(s):s)}</button>`).join('');
+ const c=$('[data-k="clr"]');if(c){c.classList.toggle('warn',!!clrArm);c.textContent=clrArm?'¿Seguro? Tocá otra vez':'Borrar todo'}};
+const key=k=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+ if(k!=='clr'&&clrArm){clrArm=0}
+ if(k==='⌫')txt=txt.slice(0,-1);
+ else if(k===' '){if(txt&&!/\s$/.test(txt))txt+=' '}
+ else if(k===','||k==='.'){txt=txt.trimEnd();if(txt&&!/[,.?]$/.test(txt))txt+=k+' '}
+ else if(k==='?'){txt=txt.trimEnd();if(txt&&!/[,.?]$/.test(txt)){const i=Math.max(txt.lastIndexOf('.'),txt.lastIndexOf('?'))+1;const s=txt.slice(i);
+   if(!s.includes('¿')){const lead=s.match(/^\s*/)[0].length;txt=txt.slice(0,i+lead)+'¿'+txt.slice(i+lead)}txt+='? '}}
+ else if(k==='clr'){if(clrArm){txt='';clrArm=0}else{clrArm=1;clearTimeout(key.h);key.h=setTimeout(()=>{clrArm=0;wrender()},3000)}}
+ else if(k==='play'){const t=capT(txt.trim());if(t){say(t);learnFrom(txt)}else toast('Primero escribí algo con las letras')}
+ else txt+=k;
+ saveTxt();wrender()};
+
+const go=k=>{scr.dataset.view=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else if(k==='escribir')write();else list(k);window.scrollTo(0,0)};
 
 document.addEventListener('click',e=>{
+ const kb=e.target.closest('[data-k],[data-sug]');
+ if(kb){if(kb.dataset.k!==undefined)key(kb.dataset.k);else{txt=before()+kb.dataset.sug+' ';saveTxt();try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}wrender()}return}
  const p=e.target.closest('[data-padd],[data-pdel],[data-preset]');
  if(p){const P=CATS.personas.items;
   if(p.dataset.padd!==undefined){P.push(['','🙂']);savePers();editPers();const ins=scr.querySelectorAll('[data-pname]');ins[ins.length-1].focus()}
