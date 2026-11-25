@@ -99,12 +99,33 @@ button,select{font:inherit;color:inherit}
 .k:active{background:var(--line);transform:scale(.97)}
 .k.p{background:color-mix(in srgb,var(--wri) 16%,var(--soft))}
 .k.del{flex:1.6}
-.k.sp{flex:5;font-size:clamp(18px,2.2vw,24px)}
+.k.sp{flex:4;font-size:clamp(18px,2.2vw,24px)}
 .k.clr{flex:2;font-size:clamp(16px,2vw,22px)}
 .k.clr.warn{background:var(--no);color:#fff}
 .k.play{flex:3;background:var(--yes);color:#fff;font-size:clamp(22px,3vw,34px)}
 [data-hc="1"] .k{border:2px solid #fff;box-shadow:none}
 [data-hc="1"]{--wri:#8c9eff}
+/* Mensajes */
+:root{--msg:#a15c07}
+[data-hc="1"]{--msg:#ffb74d}
+.badge{position:absolute;top:10px;right:12px;min-width:44px;height:44px;padding:0 10px;border-radius:999px;background:var(--no);color:#fff;font-size:24px;display:grid;place-items:center;box-shadow:0 0 0 4px #fff}
+.k.send{flex:2.4;background:var(--msg);color:#fff;font-size:clamp(18px,2.4vw,28px)}
+.mov{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.mov.show{display:flex}
+.mcard{background:var(--bg);color:var(--ink);border-radius:26px;border:4px solid var(--msg);padding:22px;width:min(900px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:16px}
+.mfrom{font-size:clamp(22px,3vw,30px);font-weight:700;color:var(--msg)}
+.mtext{font-size:clamp(30px,5vw,52px);font-weight:700;line-height:1.15;word-break:break-word}
+.mbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mbtns button{border:0;border-radius:18px;min-height:90px;font-size:clamp(20px,2.6vw,28px);font-weight:700;cursor:pointer;background:var(--soft);color:var(--ink)}
+.mbtns .si{background:var(--yes);color:#fff}.mbtns .no{background:var(--no);color:#fff}.mbtns .re{background:var(--msg);color:#fff}
+.bubs{display:flex;flex-direction:column;gap:10px}
+.bub{max-width:85%;align-self:flex-start;background:var(--soft);border:2px solid color-mix(in srgb,var(--msg) 45%,var(--line));border-radius:20px 20px 20px 6px;padding:10px 16px;font-size:clamp(22px,3vw,32px);font-weight:700;line-height:1.2;cursor:pointer;word-break:break-word}
+.bub b{display:block;font-size:16px;color:var(--msg)}
+.bub small{display:block;font-size:13px;font-weight:400;opacity:.6;margin-top:4px}
+.bub.mio{align-self:flex-end;background:color-mix(in srgb,var(--msg) 14%,var(--bg));border-radius:20px 20px 6px 20px;cursor:default}
+.macts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.macts .t{min-height:110px}
+.alts input[type=text]{font:inherit;font-size:15px;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:130px;-webkit-user-select:text;user-select:text}
 /* Editor de personas */
 .pbtn{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 14px;min-height:36px;cursor:pointer;font-weight:700}
 .pl{display:flex;flex-direction:column;gap:10px}
@@ -136,6 +157,8 @@ button,select{font:inherit;color:inherit}
     <button data-l="3" aria-pressed="false">Nivel 3 · Completo</button>
   </div>
   <button class="pbtn" id="editp">✏️ Editar personas</button>
+  <label>Mi nombre en los mensajes <input type="text" id="yo" maxlength="30" autocomplete="off"></label>
+  <button class="pbtn" id="famlink">📲 Link para la familia</button>
   <label><input type="checkbox" id="hc"> Alto contraste</label>
   <label><input type="checkbox" id="awake" checked> Pantalla siempre prendida</label>
   <label>Voz <select id="voz"><option value="">Automática</option></select></label>
@@ -151,6 +174,7 @@ button,select{font:inherit;color:inherit}
   <main id="screen"></main>
 </div>
 <div class="toast" id="toast"></div>
+<div class="mov" id="mov" role="dialog" aria-modal="true"></div>
 <div class="upd" id="upd" role="status"><span>Hay una versión nueva</span><button class="go" id="updgo">Actualizar</button><button class="x" id="updx" aria-label="Ahora no">✕</button></div>
 <script>
 {
@@ -167,7 +191,7 @@ const CATS={
  personas:{t:'Quiero ver a…',c:'--ppl',note:'Para poner los nombres de la familia: ⚙ Ajustes → Editar personas.',items:[['Mi hijo','👨'],['Mi hija','👩'],['Mi esposo','👴'],['Mis nietos','🧒'],['Mi hermana','👵'],['La enfermera','👩‍⚕️'],['El médico','🩺'],['Una amiga','💐']]},
  frases:{t:'Frases',c:'--fra',items:[['Gracias','🙏'],['Te quiero','❤️'],['Estoy bien','👌'],['No entiendo','❓'],['Más despacio','🐢'],['Esperá','✋'],['Quiero descansar','😌'],['¿Qué día es hoy?','📅'],['Quiero ir a casa','🏠'],['No estoy segura','〰️']]}
 };
-const MAIN=[['dolor','Dolor','🤕','--pain'],['sentir','Me siento','f:contenta:#ffd43b','--feel'],['necesito','Necesito','🙋‍♀️','--need'],['escribir','Escribir','⌨️','--wri'],['personas','Personas','👨‍👩‍👧','--ppl',3],['frases','Frases','💬','--fra',3]];
+const MAIN=[['dolor','Dolor','🤕','--pain'],['sentir','Me siento','f:contenta:#ffd43b','--feel'],['necesito','Necesito','🙋‍♀️','--need'],['escribir','Escribir','⌨️','--wri'],['mensajes','Mensajes','✉️','--msg'],['personas','Personas','👨‍👩‍👧','--ppl',3],['frases','Frases','💬','--fra',3]];
 const LVINFO={1:'Nivel 1: Sí / No y lo esencial (dolor de frente, 4 sentimientos, 6 necesidades), con botones extra grandes.',2:'Nivel 2: suma "No sé", más sentimientos y necesidades, dolor de espaldas y zonas como garganta u ojos.',3:'Nivel 3: todo, incluidas Personas y Frases.'};
 
 const $=s=>document.querySelector(s),scr=$('#screen'),ph=$('#phrase');
@@ -272,7 +296,7 @@ const KROWS=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h',
 const write=()=>{scr.innerHTML=`<div class="wr"><div class="wline"><button class="back" data-go="home">← Inicio</button><div class="wtext" id="wtext" aria-live="polite"></div></div>
  <div class="sug" id="sug"></div>
  <div class="kb">${KROWS.map(r=>`<div class="kr">${r.map(k=>`<button class="k${/[,.?]/.test(k)?' p':''}${k==='⌫'?' del':''}" data-k="${k}" aria-label="${k==='⌫'?'Borrar letra':k}">${k==='⌫'?'⌫':k.toUpperCase()}</button>`).join('')}</div>`).join('')}
- <div class="kr"><button class="k clr" data-k="clr">Borrar todo</button><button class="k sp" data-k=" " aria-label="Espacio">espacio</button><button class="k play" data-k="play">▶ Decir</button></div></div></div>`;wrender()};
+ <div class="kr"><button class="k clr" data-k="clr">Borrar todo</button><button class="k sp" data-k=" " aria-label="Espacio">espacio</button><button class="k send" data-k="send">✉ Enviar</button><button class="k play" data-k="play">▶ Decir</button></div></div></div>`;wrender()};
 const wrender=()=>{const w=$('#wtext');if(!w)return;
  w.classList.toggle('empty',!txt);w.innerHTML=txt?`<span style="white-space:pre-wrap">${esc(capT(txt))}</span><span class="caret"></span>`:'<span class="caret"></span>&nbsp;Escribí con las letras de abajo';
  w.scrollTop=w.scrollHeight;const st=!prevWord();
@@ -286,13 +310,58 @@ const key=k=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
  else if(k==='?'){txt=txt.trimEnd();if(txt&&!/[,.?]$/.test(txt)){const i=Math.max(txt.lastIndexOf('.'),txt.lastIndexOf('?'))+1;const s=txt.slice(i);
    if(!s.includes('¿')){const lead=s.match(/^\s*/)[0].length;txt=txt.slice(0,i+lead)+'¿'+txt.slice(i+lead)}txt+='? '}}
  else if(k==='clr'){if(clrArm){txt='';clrArm=0}else{clrArm=1;clearTimeout(key.h);key.h=setTimeout(()=>{clrArm=0;wrender()},3000)}}
+ else if(k==='send'){const t=capT(txt.trim());if(t){sendMsg(t);learnFrom(txt);txt=''}else toast('Primero escribí algo con las letras')}
  else if(k==='play'){const t=capT(txt.trim());if(t){say(t);learnFrom(txt)}else toast('Primero escribí algo con las letras')}
  else txt+=k;
  saveTxt();wrender()};
 
-const go=k=>{scr.dataset.view=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else if(k==='escribir')write();else list(k);window.scrollTo(0,0)};
+/* ===== Mensajes con la familia (buzón en Supabase) =====
+   Cada tablet tiene una "sala": un código secreto largo. El link de la familia lleva ese código.
+   El nombre con que se firman los mensajes es local de cada aparato (Ajustes → Mi nombre). */
+const SB='https://hsxxdixhwvunierirxgs.supabase.co/rest/v1/rpc/',SBK='sb_publishable_avQ3-r13fxmHEZBCrEIdoQ_m1BankVb';
+const rpc=(f,b)=>fetch(SB+f,{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
+const yo=()=>(store('yo')||'').trim()||'Mamá';
+let sala=store('sala');
+if(!sala){const a=new Uint8Array(18);crypto.getRandomValues(a);sala=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');store('sala',sala)}
+let msgs=[],unseen=+(store('nolei')||0),ovMsg=null,polling=false;
+try{msgs=JSON.parse(store('msgs')||'[]')||[]}catch(e){}
+const saveMsgs=()=>{msgs=msgs.slice(-150);store('msgs',JSON.stringify(msgs));store('nolei',String(unseen))};
+const badge=()=>{const b=document.querySelector('[data-go="mensajes"]');if(!b)return;let el=b.querySelector('.badge');if(unseen>0){if(!el){el=document.createElement('span');el.className='badge';b.appendChild(el)}el.textContent=unseen}else if(el)el.remove()};
+const hora=t=>{try{return new Date(t).toLocaleString('es-AR',{weekday:'short',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+const chime=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[[660,0],[880,.22]].forEach(([f,t])=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=f;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.22,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.45);o.start(A.currentTime+t);o.stop(A.currentTime+t+.5)})}catch(e){}};
+const readMsg=m=>say(`Mensaje de ${m.de}. ${m.texto}`);
+const showMsg=m=>{ovMsg=m;const ov=$('#mov');
+ ov.innerHTML=`<div class="mcard"><div class="mfrom">✉️ Mensaje de ${esc(m.de)}</div><div class="mtext">${esc(m.texto)}</div>
+ <div class="mbtns"><button data-m="rep">🔊 Repetir</button><button class="si" data-m="si">👍 Sí</button><button class="no" data-m="no">👎 No</button><button class="re" data-m="esc">⌨️ Responder</button><button data-m="ok">✓ Listo</button></div></div>`;
+ ov.classList.add('show');chime();setTimeout(()=>readMsg(m),900)};
+const closeMsg=()=>{$('#mov').classList.remove('show');ovMsg=null;unseen=0;saveMsgs();badge()};
+const sendMsg=t=>rpc('hab_enviar',{p_sala:sala,p_de:yo(),p_texto:t}).then(id=>{if(!msgs.some(m=>m.id===id))msgs.push({id,de:yo(),texto:t,t:new Date().toISOString(),mio:true});saveMsgs();if(scr.dataset.view==='mensajes')go('mensajes');toast('Enviado a la familia ✓')}).catch(()=>toast('No se pudo mandar: revisá el Wi‑Fi'));
+const poll=async()=>{if(polling||navigator.onLine===false)return;polling=true;
+ try{const first=!msgs.length,desde=msgs.reduce((a,m)=>Math.max(a,m.id||0),0);
+  const r=await rpc('hab_leer',{p_sala:sala,p_desde:desde}),fam=[];
+  r.forEach(x=>{if(msgs.some(m=>m.id===x.id))return;const mio=x.de===yo();msgs.push({id:x.id,de:x.de,texto:x.texto,t:x.creado,mio});if(!mio)fam.push(x)});
+  if(r.length){if(!first){unseen+=fam.length}saveMsgs();badge();if(scr.dataset.view==='mensajes')mensajes();if(fam.length&&!first)showMsg(fam[fam.length-1])}
+ }catch(e){}polling=false};
+const mensajes=()=>{unseen=0;saveMsgs();
+ const L=msgs.slice(-40).map(m=>`<div class="bub${m.mio?' mio':''}"${m.mio?'':` data-m="leer" data-id="${m.id}"`}><b>${m.mio?'Yo':esc(m.de)}</b>${esc(m.texto)}<small>${hora(m.t)}</small></div>`).join('');
+ scr.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px"><div class="head"><button class="back" data-go="home">← Inicio</button><h1>Mensajes</h1></div>
+ ${L?`<p class="note">Tocá un mensaje para escucharlo.</p><div class="bubs">${L}</div>`:'<p class="note">Todavía no hay mensajes. Para que la familia pueda escribir: ⚙ Ajustes → 📲 Link para la familia.</p>'}
+ <div class="macts">${tile('Sí','👍','--yes','data-m="si"')}${tile('No','👎','--no','data-m="no"')}${tile('Escribir','⌨️','--msg','data-m="esc"')}</div></div>`};
+const msgAct=(a,id)=>{
+ if(a==='leer'){const m=msgs.find(x=>String(x.id)===id);if(m)readMsg(m);return}
+ if(a==='rep'){if(ovMsg)readMsg(ovMsg);return}
+ if(a==='si'||a==='no'){const t=a==='si'?'Sí':'No';say(t);sendMsg(t);if(ovMsg)closeMsg();return}
+ if(a==='esc'){if(ovMsg)closeMsg();go('escribir');toast('Escribí la respuesta y tocá ✉ Enviar');return}
+ if(a==='ok')closeMsg()};
+setInterval(poll,20000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')poll()});
+window.addEventListener('online',poll);
+setTimeout(poll,1500);
+
+const go=k=>{scr.dataset.view=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else if(k==='escribir')write();else if(k==='mensajes')mensajes();else list(k);if(k==='home')badge();window.scrollTo(0,k==='mensajes'?document.body.scrollHeight:0)};
 
 document.addEventListener('click',e=>{
+ const mb=e.target.closest('[data-m]');if(mb){msgAct(mb.dataset.m,mb.dataset.id);return}
  const kb=e.target.closest('[data-k],[data-sug]');
  if(kb){if(kb.dataset.k!==undefined)key(kb.dataset.k);else{txt=before()+kb.dataset.sug+' ';saveTxt();try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}wrender()}return}
  const p=e.target.closest('[data-padd],[data-pdel],[data-preset]');
@@ -317,6 +386,11 @@ document.addEventListener('touchstart',e=>{sw=e.touches.length===1&&!zoomed()?{x
 document.addEventListener('touchmove',e=>{if(e.touches.length>1)sw=null},{passive:true});
 document.addEventListener('touchend',e=>{if(!sw)return;const t=e.changedTouches[0],dx=t.clientX-sw.x,dy=Math.abs(t.clientY-sw.y),need=Math.min(160,innerWidth*.25);
  if(dx>need&&dy<dx*.6&&Date.now()-sw.t<900&&!zoomed()){$('#ajustes').open=false;if(scr.dataset.view!=='home')go('home')}sw=null},{passive:true});
+$('#yo').value=store('yo')||'';$('#yo').placeholder='Mamá';
+$('#yo').oninput=e=>store('yo',e.target.value.trim());
+$('#famlink').onclick=async()=>{const url=new URL('familia.html#'+sala,location.href).href;
+ try{if(navigator.share){await navigator.share({title:'Hablemos',text:'Con este link le podés escribir a '+yo()+' en su tablet (no lo compartas fuera de la familia):',url});return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(url);toast('Link copiado: pegalo en WhatsApp')}catch(e){prompt('Copiá este link y mandalo a la familia:',url)}};
 $('#editp').onclick=()=>{$('#ajustes').open=false;go('editpers')};
 $('#rep').onclick=()=>last?say(last):say('Tocá un botón');
 $('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.')};

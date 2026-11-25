@@ -1,7 +1,7 @@
 // Guarda la app en la tablet para que ande aunque se corte el Wi-Fi.
 // Primero intenta la versión nueva de internet; si no hay conexión, usa la guardada.
-const CACHE = 'hablemos-v7';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable.png'];
+const CACHE = 'hablemos-v8';
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './icon-maskable.png', './familia.html'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

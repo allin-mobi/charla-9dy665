@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hablemos · Familia</title>
+<meta name="theme-color" content="#a15c07">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#fbfaf7;--ink:#17181a;--soft:#efede8;--line:#dcd9d2;--msg:#a15c07;--yes:#1e9e50;--no:#d7302f}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#121314;--ink:#f3f3f1;--soft:#202224;--line:#34373a;--msg:#e0a24a}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#121314;--ink:#f3f3f1;--soft:#202224;--line:#34373a;--msg:#e0a24a}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif;display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+button,input,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:10px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));border-bottom:1px solid var(--line);background:var(--soft)}
+header h1{margin:0;font-size:20px;flex:1}
+header button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer}
+#list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.b{max-width:85%;align-self:flex-start;background:var(--soft);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:8px 14px;word-break:break-word}
+.b b{display:block;font-size:13px;color:var(--msg)}
+.b small{display:block;font-size:11px;opacity:.6;margin-top:2px}
+.b.ella{border:2px solid var(--msg);font-size:20px;font-weight:700}
+.b.mio{align-self:flex-end;background:color-mix(in srgb,var(--msg) 14%,var(--bg));border-radius:18px 18px 6px 18px}
+.vacio{margin:auto;text-align:center;opacity:.7;max-width:320px}
+.quick{display:flex;gap:6px;overflow-x:auto;padding:8px 16px 0}
+.quick button{flex:none;border:1px solid color-mix(in srgb,var(--msg) 50%,var(--line));background:var(--bg);border-radius:999px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+form{display:flex;gap:8px;padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+textarea{flex:1;resize:none;height:52px;max-height:140px;padding:12px 14px;border-radius:16px;border:2px solid var(--line);background:var(--bg);font-size:17px}
+textarea:focus{outline:none;border-color:var(--msg)}
+.send{border:0;border-radius:16px;background:var(--msg);color:#fff;font-weight:700;padding:0 18px;cursor:pointer}
+.send:disabled{opacity:.5}
+.card{margin:auto;max-width:420px;width:calc(100% - 32px);background:var(--soft);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.card h2{margin:0;font-size:22px}
+.card input{padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);font-size:18px}
+.card button{border:0;border-radius:14px;background:var(--msg);color:#fff;font-weight:700;min-height:50px;font-size:18px;cursor:pointer}
+.estado{font-size:12px;text-align:center;opacity:.7;padding:2px}
+.estado.mal{color:var(--no);opacity:1}
+</style>
+</head>
+<body>
+<header><h1 id="tit">✉️ Hablemos · Mensajes</h1><button id="cambiar" hidden>Mi nombre</button></header>
+<main id="app" style="flex:1;display:flex;flex-direction:column;min-height:0"></main>
+<script>
+const SB='https://hsxxdixhwvunierirxgs.supabase.co/rest/v1/rpc/',SBK='sb_publishable_avQ3-r13fxmHEZBCrEIdoQ_m1BankVb';
+const rpc=(f,b)=>fetch(SB+f,{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
+const st=(k,v)=>{try{if(v===undefined)return localStorage.getItem('hab-fam-'+k);localStorage.setItem('hab-fam-'+k,v)}catch(e){return null}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hora=t=>new Date(t).toLocaleString('es-AR',{weekday:'short',hour:'2-digit',minute:'2-digit'});
+const app=document.getElementById('app'),sala=(location.hash||'').slice(1);
+let msgs=[],mios=new Set(JSON.parse(st('mios')||'[]')),busy=false,nuevosOcultos=0;
+const nombre=()=>(st('nombre')||'').trim();
+
+const pedirNombre=()=>{app.innerHTML=`<form class="card" id="fn"><h2>¿Cómo te llamás?</h2>
+ <p style="margin:0">Así vas a aparecer en la tablet: ella va a escuchar "Mensaje de <i>tu nombre</i>". Se guarda solo en este celular.</p>
+ <input id="nm" maxlength="30" placeholder="Por ejemplo: Juan" value="${esc(nombre())}" autocomplete="off"><button>Listo</button></form>`;
+ const i=document.getElementById('nm');i.focus();
+ document.getElementById('fn').onsubmit=e=>{e.preventDefault();const v=i.value.trim();if(!v){i.focus();return}st('nombre',v);chat()}};
+
+const pintar=()=>{const L=document.getElementById('list');if(!L)return;
+ if(!msgs.length){L.innerHTML='<p class="vacio">Todavía no hay mensajes. Escribile algo: le aparece grande en la tablet y se lo lee en voz alta.</p>';return}
+ const abajo=L.scrollHeight-L.scrollTop-L.clientHeight<80;
+ L.innerHTML=msgs.map(m=>{const mio=mios.has(m.id);return `<div class="b${mio?' mio':''}${!mio&&m.ella?' ella':''}"><b>${mio?'Yo':esc(m.de)}</b>${esc(m.texto)}<small>${hora(m.creado)}</small></div>`}).join('');
+ if(abajo||pintar.primera){L.scrollTop=L.scrollHeight;pintar.primera=false}};
+
+const beep=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)(),o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.2,A.currentTime);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+.4);o.start();o.stop(A.currentTime+.4)}catch(e){}};
+const estado=(t,mal)=>{const e=document.getElementById('estado');if(e){e.textContent=t;e.classList.toggle('mal',!!mal)}};
+
+const traer=async()=>{if(busy)return;busy=true;
+ try{const desde=msgs.reduce((a,m)=>Math.max(a,m.id),0),r=await rpc('hab_leer',{p_sala:sala,p_desde:desde});
+  if(r.length){const yo=nombre(),primera=!msgs.length;let deElla=0;
+   r.forEach(x=>{if(msgs.some(m=>m.id===x.id))return;x.ella=!mios.has(x.id)&&x.de!==yo;msgs.push(x);if(x.ella&&!primera)deElla++});
+   pintar();
+   if(deElla){beep();if(document.hidden){nuevosOcultos+=deElla;document.title=`(${nuevosOcultos}) Hablemos · Familia`}}}
+  estado('')}catch(e){estado('Sin conexión: reintentando…',true)}busy=false};
+
+const enviar=async t=>{t=t.trim();if(!t)return false;
+ try{const id=await rpc('hab_enviar',{p_sala:sala,p_de:nombre(),p_texto:t});mios.add(id);st('mios',JSON.stringify([...mios].slice(-500)));await traer();return true}
+ catch(e){estado('No se pudo mandar. Revisá la conexión y probá de nuevo.',true);return false}};
+
+const chat=()=>{document.getElementById('cambiar').hidden=false;
+ app.innerHTML=`<div id="list"></div><div class="estado" id="estado"></div>
+ <div class="quick">${['Te quiero ❤️','¿Cómo estás?','Ya voy para allá','Todo bien','Mañana te visito'].map(q=>`<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+ <form id="fm"><textarea id="tx" maxlength="1000" placeholder="Escribile un mensaje…" rows="1"></textarea><button class="send" id="bs">Enviar</button></form>`;
+ const tx=document.getElementById('tx'),bs=document.getElementById('bs');
+ const mandar=async t=>{bs.disabled=true;const ok=await enviar(t);bs.disabled=false;return ok};
+ document.getElementById('fm').onsubmit=async e=>{e.preventDefault();if(await mandar(tx.value)){tx.value='';tx.style.height=''}tx.focus()};
+ tx.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!/Android|iPhone|iPad/i.test(navigator.userAgent)){e.preventDefault();document.getElementById('fm').requestSubmit()}};
+ tx.oninput=()=>{tx.style.height='';tx.style.height=Math.min(tx.scrollHeight,140)+'px'};
+ document.querySelector('.quick').onclick=e=>{const b=e.target.closest('[data-q]');if(b)mandar(b.dataset.q)};
+ pintar.primera=true;pintar();traer()};
+
+document.getElementById('cambiar').onclick=pedirNombre;
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){nuevosOcultos=0;document.title='Hablemos · Familia';traer()}});
+setInterval(()=>{if(nombre()&&sala.length>=20)traer()},10000);
+
+if(sala.length<20){app.innerHTML='<div class="card"><h2>Este link no está completo</h2><p style="margin:0">Pedile a quien te lo pasó que lo mande de nuevo desde la tablet: ⚙ Ajustes → 📲 Link para la familia.</p></div>'}
+else if(!nombre())pedirNombre();else chat();
+</script>
+</body>
+</html>
