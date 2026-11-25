@@ -192,7 +192,7 @@ const pain=()=>{if(lvl<2)view='frente';const back=view==='espalda',parts=FRONT.m
  <h2>¿Cuánto duele?</h2><div class="lv">${lv.map(([l,f,c])=>tile(l,'f:'+f+':#fff',c==='l1'?'--yes':c==='l3'?'--no':'--help',`data-lvl="${l}"`,c)).join('')}</div>
  <p class="note">${where?'Tocá cuánto le duele '+where+'.':'Primero tocá en la figura dónde duele.'}</p></div></div></div>`};
 
-const go=k=>{scr.dataset.v=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else list(k);window.scrollTo(0,0)};
+const go=k=>{scr.dataset.view=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else list(k);window.scrollTo(0,0)};
 
 document.addEventListener('click',e=>{
  const p=e.target.closest('[data-padd],[data-pdel],[data-preset]');
@@ -214,12 +214,12 @@ $('#rep').onclick=()=>last?say(last):say('Tocá un botón');
 $('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.')};
 $('#voz').onchange=e=>{voiceName=e.target.value;store('voz',voiceName);say('Hola')};
 $('#vel').onchange=e=>{rate=+e.target.value;store('vel',rate);say('Así hablo')};
-const setLvl=n=>{lvl=n;document.body.dataset.lvl=n;store('nivel',n);$('#lvinfo').textContent=LVINFO[n];document.querySelectorAll('#lvls button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.l===n));const v=scr.dataset.v||'home';if(v==='dolor')pain();else go(v)};
+const setLvl=n=>{lvl=n;document.body.dataset.lvl=n;store('nivel',n);$('#lvinfo').textContent=LVINFO[n];document.querySelectorAll('#lvls button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.l===n));const v=scr.dataset.view||'home';if(v==='dolor')pain();else go(v)};
 $('#hc').onchange=e=>{document.body.dataset.hc=e.target.checked?'1':'0';store('hc',e.target.checked?'1':'0')};
 const sl=+store('nivel'),sv=store('vel'),sh=store('hc');
 if(sv){rate=+sv;$('#vel').value=sv}
 if(sh==='1'){$('#hc').checked=true;document.body.dataset.hc='1'}
-scr.dataset.v='home';setLvl([1,2,3].includes(sl)?sl:1);
+scr.dataset.view='home';setLvl([1,2,3].includes(sl)?sl:1);
 
 /* Pantalla siempre prendida (para que la tablet no se apague al lado de la cama) */
 let lock=null;
