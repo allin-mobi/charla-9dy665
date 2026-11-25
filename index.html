@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hablemos, mamá</title>
 <meta name="theme-color" content="#fbfaf7">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
 *{box-sizing:border-box;min-width:0}
 html,body{height:100%}
 /* Tablet: sin zoom por doble toque, sin selección de texto al mantener el dedo, sin "tirar para recargar" */
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent;touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior-y:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior-y:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 button,select{font:inherit;color:inherit}
 .alts{padding:6px max(16px,3vw);background:var(--soft);border-bottom:1px solid var(--line);font-size:14px}
 .alts summary{cursor:pointer;min-height:32px;display:flex;align-items:center;font-weight:700;color:color-mix(in srgb,var(--ink) 75%,transparent)}
@@ -63,7 +63,7 @@ button,select{font:inherit;color:inherit}
 .note{font-size:14px;color:color-mix(in srgb,var(--ink) 65%,transparent);margin:0}
 .pain{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
 .bodybox{background:var(--soft);border-radius:22px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
-.bodybox svg{width:100%;max-height:58vh;touch-action:pan-x pan-y}
+.bodybox svg{width:100%;max-height:58vh;touch-action:manipulation}
 .part{fill:color-mix(in srgb,var(--pain) 22%,var(--bg));stroke:color-mix(in srgb,var(--pain) 70%,var(--ink));stroke-width:2;cursor:pointer;transition:fill .15s}
 .part.sel{fill:var(--pain)}
 .side{font-size:13px;fill:var(--ink);opacity:.7}
@@ -309,13 +309,14 @@ document.addEventListener('click',e=>{
  if(b.dataset.say)say(b.dataset.say);
  if(b.dataset.go)go(b.dataset.go);
 });
-/* Juntar dos dedos (pellizcar hacia adentro) = volver al inicio */
-let pz=null,pinched=0;
-const tdist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
-document.addEventListener('touchstart',e=>{pz=e.touches.length===2?tdist(e.touches):null},{passive:true});
-document.addEventListener('touchmove',e=>{if(pz&&e.touches.length===2&&pz>80&&tdist(e.touches)<pz*.6){pz=null;pinched=Date.now();$('#ajustes').open=false;if(scr.dataset.view!=='home')go('home')}},{passive:true});
-document.addEventListener('touchend',e=>{if(e.touches.length<2)pz=null},{passive:true});
-document.addEventListener('click',e=>{if(Date.now()-pinched<600){e.stopPropagation();e.preventDefault()}},true);  // que el pellizco no apriete un botón sin querer
+/* Deslizar un dedo de izquierda a derecha = volver al inicio (como pasar una hoja para atrás).
+   Con la pantalla agrandada (zoom) no cuenta: ahí el dedo sirve para moverse. */
+let sw=null;
+const zoomed=()=>window.visualViewport&&visualViewport.scale>1.05;
+document.addEventListener('touchstart',e=>{sw=e.touches.length===1&&!zoomed()?{x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()}:null},{passive:true});
+document.addEventListener('touchmove',e=>{if(e.touches.length>1)sw=null},{passive:true});
+document.addEventListener('touchend',e=>{if(!sw)return;const t=e.changedTouches[0],dx=t.clientX-sw.x,dy=Math.abs(t.clientY-sw.y),need=Math.min(160,innerWidth*.25);
+ if(dx>need&&dy<dx*.6&&Date.now()-sw.t<900&&!zoomed()){$('#ajustes').open=false;if(scr.dataset.view!=='home')go('home')}sw=null},{passive:true});
 $('#editp').onclick=()=>{$('#ajustes').open=false;go('editpers')};
 $('#rep').onclick=()=>last?say(last):say('Tocá un botón');
 $('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.')};
