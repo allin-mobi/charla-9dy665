@@ -104,6 +104,10 @@ button,select{font:inherit;color:inherit}
 .k.clr.warn{background:var(--no);color:#fff}
 .k.play{flex:3;background:var(--yes);color:#fff;font-size:clamp(22px,3vw,34px)}
 [data-hc="1"] .k{border:2px solid #fff;box-shadow:none}
+.wta{flex:1;min-height:150px;resize:vertical;padding:12px 16px;border-radius:18px;background:var(--bg);color:var(--ink);border:3px solid var(--wri);font:inherit;font-size:clamp(22px,3.4vw,34px);font-weight:700;line-height:1.2;-webkit-user-select:text;user-select:text}
+.wta:focus{outline:none;box-shadow:0 0 0 4px color-mix(in srgb,var(--wri) 30%,transparent)}
+.wbtns{display:flex;gap:10px}
+.wbtns .k{min-height:72px}
 [data-hc="1"]{--wri:#8c9eff}
 /* Mensajes */
 :root{--msg:#a15c07}
@@ -145,7 +149,7 @@ button,select{font:inherit;color:inherit}
 /* Alto contraste: se combina con cualquier nivel */
 [data-hc="1"]{--bg:#000;--ink:#fff;--soft:#111;--line:#555;--yes:#00c853;--no:#ff1744;--unk:#9e9e9e;--pain:#ff6d00;--feel:#b388ff;--need:#40a9ff;--ppl:#1de9b6;--fra:#ff4f9a;color-scheme:dark}
 [data-hc="1"] .t{color:#000;box-shadow:none;border:3px solid #fff}
-@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.t{min-height:118px;border-radius:18px}.yn{gap:10px}.pain{grid-template-columns:1fr}.phrase{min-height:64px;padding:8px 12px}.ic{width:60px}.help{font-size:16px;padding:4px 10px}.alts select{max-width:140px}[data-lvl="1"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}[data-lvl="1"] .t{min-height:150px}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.t{min-height:118px;border-radius:18px}.yn{gap:10px}.pain{grid-template-columns:1fr}.phrase{min-height:64px;padding:8px 12px}.ic{width:60px}.help{width:auto;flex:none;font-size:16px;padding:4px 10px}.alts select{max-width:140px}[data-lvl="1"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}[data-lvl="1"] .t{min-height:150px}}
 @media(prefers-reduced-motion:reduce){.t,.phrase.flash{transition:none;animation:none}}
 </style>
 </head>
@@ -159,6 +163,7 @@ button,select{font:inherit;color:inherit}
   <button class="pbtn" id="editp">✏️ Editar personas</button>
   <label>Mi nombre en los mensajes <input type="text" id="yo" maxlength="30" autocomplete="off"></label>
   <button class="pbtn" id="famlink">📲 Link para la familia</button>
+  <div class="seg" id="modos"><button data-modo="mama" aria-pressed="true">👵 Modo mamá · teclado grande</button><button data-modo="cel" aria-pressed="false">📱 Modo celular · teclado del teléfono</button></div>
   <label><input type="checkbox" id="ayudafam" checked> ¡Ayuda! avisa al celular de la familia</label>
   <label><input type="checkbox" id="hc"> Alto contraste</label>
   <label><input type="checkbox" id="awake" checked> Pantalla siempre prendida</label>
@@ -294,11 +299,17 @@ const learnFrom=t=>{t.toLowerCase().split(/[.?]+/).forEach(s=>{const w=s.split(/
  const ks=Object.keys(learn);if(ks.length>3000)ks.sort((a,b)=>learn[a]-learn[b]).slice(0,ks.length-3000).forEach(k=>delete learn[k]);
  store('palabras',JSON.stringify(learn))};
 const KROWS=[['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l','ñ'],['z','x','c','v','b','n','m',',','.','?','⌫']];
-const write=()=>{scr.innerHTML=`<div class="wr"><div class="wline"><button class="back" data-go="home">← Inicio</button><div class="wtext" id="wtext" aria-live="polite"></div></div>
+const modoCel=()=>store('modo')==='cel';
+const write=()=>{if(modoCel()){scr.innerHTML=`<div class="wr"><div class="wline"><button class="back" data-go="home">← Inicio</button></div>
+ <textarea class="wta" id="wta" maxlength="1000" placeholder="Escribí acá con el teclado del teléfono…" autocapitalize="sentences"></textarea>
+ <div class="wbtns"><button class="k clr" data-k="clr">Borrar todo</button><button class="k send" data-k="send">✉ Enviar</button><button class="k play" data-k="play">▶ Decir</button></div></div>`;
+ const ta=$('#wta');ta.value=txt;ta.oninput=()=>{txt=ta.value;saveTxt()};wrender();setTimeout(()=>ta.focus(),50);return}
+ scr.innerHTML=`<div class="wr"><div class="wline"><button class="back" data-go="home">← Inicio</button><div class="wtext" id="wtext" aria-live="polite"></div></div>
  <div class="sug" id="sug"></div>
  <div class="kb">${KROWS.map(r=>`<div class="kr">${r.map(k=>`<button class="k${/[,.?]/.test(k)?' p':''}${k==='⌫'?' del':''}" data-k="${k}" aria-label="${k==='⌫'?'Borrar letra':k}">${k==='⌫'?'⌫':k.toUpperCase()}</button>`).join('')}</div>`).join('')}
  <div class="kr"><button class="k clr" data-k="clr">Borrar todo</button><button class="k sp" data-k=" " aria-label="Espacio">espacio</button><button class="k send" data-k="send">✉ Enviar</button><button class="k play" data-k="play">▶ Decir</button></div></div></div>`;wrender()};
-const wrender=()=>{const w=$('#wtext');if(!w)return;
+const wrender=()=>{const ta=$('#wta');if(ta){if(ta.value!==txt)ta.value=txt;const c=$('[data-k="clr"]');if(c){c.classList.toggle('warn',!!clrArm);c.textContent=clrArm?'¿Seguro? Tocá otra vez':'Borrar todo'}return}
+ const w=$('#wtext');if(!w)return;
  w.classList.toggle('empty',!txt);w.innerHTML=txt?`<span style="white-space:pre-wrap">${esc(capT(txt))}</span><span class="caret"></span>`:'<span class="caret"></span>&nbsp;Escribí con las letras de abajo';
  w.scrollTop=w.scrollHeight;const st=!prevWord();
  $('#sug').innerHTML=suggest().map(s=>`<button data-sug="${esc(s)}">${esc(st?cap1(s):s)}</button>`).join('');
@@ -399,6 +410,9 @@ $('#rep').onclick=()=>last?say(last):say('Tocá un botón');
 $('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.');
  if(store('ayudafam')!=='0'){const ahora=Date.now();if(ahora-(+store('ultayuda')||0)>60000){store('ultayuda',String(ahora));sendMsg('¡Necesito ayuda! Vení, por favor.',true)}else toast('La familia ya fue avisada hace un momento')}};
 if(store('ayudafam')==='0')$('#ayudafam').checked=false;
+const setModo=m=>{store('modo',m);document.querySelectorAll('#modos button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.modo===m));if(scr.dataset.view==='escribir')write()};
+document.getElementById('modos').addEventListener('click',e=>{const b=e.target.closest('[data-modo]');if(b){setModo(b.dataset.modo);toast(b.dataset.modo==='cel'?'Modo celular: Escribir usa el teclado del teléfono':'Modo mamá: Escribir usa el teclado grande')}});
+setModo(store('modo')==='cel'?'cel':'mama');
 $('#ayudafam').onchange=e=>store('ayudafam',e.target.checked?'1':'0');
 $('#voz').onchange=e=>{voiceName=e.target.value;store('voz',voiceName);say('Hola')};
 $('#vel').onchange=e=>{rate=+e.target.value;store('vel',rate);say('Así hablo')};
