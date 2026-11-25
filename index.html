@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hablemos, mamá</title>
+<meta name="theme-color" content="#fbfaf7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hablemos">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE tender, calm, very legible: a communication board for someone recovering from a stroke
+   IDEA the laminated picture board a speech therapist leaves by the bed, made digital and spoken
+   PICTURE the board itself: huge Sí/No, colour-coded category tiles, a touchable body for pain
+   COLOUR warm white ground, green Sí, red No, one clear hue per category, amber for help
+   TYPE Atkinson Hyperlegible (built for low vision) for everything
+   LAYOUT phrase bar on top, Sí/No band, category grid; tablet 5 across, phone 2 across */
+:root{color-scheme:light;--bg:#fbfaf7;--ink:#17181a;--soft:#efede8;--line:#dcd9d2}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#121314;--ink:#f3f3f1;--soft:#202224;--line:#34373a}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#121314;--ink:#f3f3f1;--soft:#202224;--line:#34373a}
+:root{--yes:#1e9e50;--no:#d7302f;--unk:#6b7076;--pain:#ec6a12;--feel:#7a4fe0;--need:#1b74d1;--ppl:#0d8a8a;--fra:#c42a6b;--help:#ffb100}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+/* Tablet: sin zoom por doble toque, sin selección de texto al mantener el dedo, sin "tirar para recargar" */
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior-y:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button,select{font:inherit;color:inherit}
+.alts{padding:6px max(16px,3vw);background:var(--soft);border-bottom:1px solid var(--line);font-size:14px}
+.alts summary{cursor:pointer;min-height:32px;display:flex;align-items:center;font-weight:700;color:color-mix(in srgb,var(--ink) 75%,transparent)}
+.altin{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 0 4px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;min-height:36px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.alts label{display:flex;gap:6px;align-items:center}
+.alts select,.alts input{font-size:14px}
+.alts select{max-width:190px;padding:4px;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.app{display:flex;flex-direction:column;gap:14px;padding:14px max(16px,3vw) 24px;max-width:1240px;margin:0 auto}
+.bar{display:flex;gap:10px;align-items:stretch}
+.phrase{flex:1;display:flex;align-items:center;gap:12px;padding:10px 18px;min-height:76px;border-radius:18px;background:var(--soft);border:2px solid var(--line);font-size:clamp(24px,4vw,38px);font-weight:700;line-height:1.1}
+.phrase.idle{color:color-mix(in srgb,var(--ink) 45%,transparent);font-weight:400}
+.phrase.flash{animation:fl .5s ease}
+@keyframes fl{from{border-color:var(--ink)}}
+.ic{width:76px;border-radius:18px;border:2px solid var(--line);background:var(--bg);cursor:pointer;font-size:30px;display:grid;place-items:center;gap:0;padding:4px}
+.ic small{font-size:13px;display:block}
+.help{width:auto;padding:4px 16px;background:var(--help);border-color:#d99500;color:#1d1400;font-weight:700;font-size:20px}
+.yn{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.42fr) minmax(0,1fr);gap:14px}
+.t{position:relative;border:0;border-radius:22px;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 10px;min-height:120px;font-weight:700;font-size:clamp(22px,3vw,30px);line-height:1.1;text-align:center;box-shadow:inset 0 -6px 0 rgba(0,0,0,.18);transition:transform .08s}
+.t:active,.t.on{transform:scale(.96);box-shadow:inset 0 0 0 5px rgba(255,255,255,.75)}
+.t:focus-visible,.seg button:focus-visible,.ic:focus-visible{outline:4px solid var(--help);outline-offset:3px}
+.t .e{font-size:clamp(40px,6vw,64px);line-height:1}
+.t svg{width:clamp(48px,7vw,72px);height:auto}
+.yes,.no{min-height:clamp(150px,26vh,230px);font-size:clamp(40px,7vw,72px)}
+.yes{background:var(--yes)}.no{background:var(--no)}.unk{background:var(--unk);font-size:clamp(20px,2.6vw,26px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.cat{min-height:150px}
+.head{display:flex;align-items:center;gap:14px}
+.back{border:2px solid var(--line);background:var(--bg);border-radius:18px;min-height:64px;padding:0 20px;font-size:22px;font-weight:700;cursor:pointer}
+.head h1{margin:0;font-size:clamp(28px,4vw,40px);line-height:1.05;letter-spacing:-.01em}
+.note{font-size:14px;color:color-mix(in srgb,var(--ink) 65%,transparent);margin:0}
+.pain{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
+.bodybox{background:var(--soft);border-radius:22px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.bodybox svg{width:100%;max-height:58vh;touch-action:manipulation}
+.part{fill:color-mix(in srgb,var(--pain) 22%,var(--bg));stroke:color-mix(in srgb,var(--pain) 70%,var(--ink));stroke-width:2;cursor:pointer;transition:fill .15s}
+.part.sel{fill:var(--pain)}
+.side{font-size:13px;fill:var(--ink);opacity:.7}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid color-mix(in srgb,var(--pain) 60%,var(--line));background:var(--bg);border-radius:999px;padding:8px 16px;min-height:48px;font-size:18px;font-weight:700;cursor:pointer}
+.chip.sel{background:var(--pain);color:#fff;border-color:var(--pain)}
+.lvl{display:flex;flex-direction:column;gap:12px}
+.lvl h2{margin:0;font-size:24px}
+.lv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lv .t{min-height:130px;font-size:22px}
+.l1{background:#2f9e44}.l2{background:#e0a100;color:#1d1400!important}.l3{background:#c92a2a}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.lvinfo{flex-basis:100%;margin:0;font-size:13px;color:color-mix(in srgb,var(--ink) 70%,transparent)}
+/* Nivel 1: lo esencial, botones más grandes */
+[data-lvl="1"] .unk{display:none}
+[data-lvl="1"] .yn{grid-template-columns:1fr 1fr}
+[data-lvl="1"] .grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+[data-lvl="1"] .t{min-height:180px;font-size:clamp(26px,3.6vw,36px)}
+[data-lvl="1"] .yes,[data-lvl="1"] .no{min-height:clamp(180px,32vh,280px);font-size:clamp(44px,8vw,80px)}
+/* Alto contraste: se combina con cualquier nivel */
+[data-hc="1"]{--bg:#000;--ink:#fff;--soft:#111;--line:#555;--yes:#00c853;--no:#ff1744;--unk:#9e9e9e;--pain:#ff6d00;--feel:#b388ff;--need:#40a9ff;--ppl:#1de9b6;--fra:#ff4f9a;color-scheme:dark}
+[data-hc="1"] .t{color:#000;box-shadow:none;border:3px solid #fff}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.t{min-height:118px;border-radius:18px}.yn{gap:10px}.pain{grid-template-columns:1fr}.phrase{min-height:64px;padding:8px 12px}.ic{width:60px}.help{font-size:16px;padding:4px 10px}.alts select{max-width:140px}[data-lvl="1"] .grid{grid-template-columns:repeat(2,minmax(0,1fr))}[data-lvl="1"] .t{min-height:150px}}
+@media(prefers-reduced-motion:reduce){.t,.phrase.flash{transition:none;animation:none}}
+</style>
+</head>
+<body data-lvl="1" data-hc="0">
+<details class="alts" id="ajustes"><summary>⚙ Ajustes (para la familia)</summary><div class="altin">
+  <div class="seg" id="lvls">
+    <button data-l="1" aria-pressed="true">Nivel 1 · Inicial</button>
+    <button data-l="2" aria-pressed="false">Nivel 2 · Intermedio</button>
+    <button data-l="3" aria-pressed="false">Nivel 3 · Completo</button>
+  </div>
+  <label><input type="checkbox" id="hc"> Alto contraste</label>
+  <label><input type="checkbox" id="awake" checked> Pantalla siempre prendida</label>
+  <label>Voz <select id="voz"><option value="">Automática</option></select></label>
+  <label>Velocidad <select id="vel"><option value="0.75">Lenta</option><option value="0.9" selected>Normal</option><option value="1.05">Rápida</option></select></label>
+  <p class="lvinfo" id="lvinfo"></p>
+</div></details>
+<div class="app">
+  <div class="bar">
+    <div class="phrase idle" id="phrase" aria-live="polite">Tocá un botón</div>
+    <button class="ic" id="rep" aria-label="Repetir en voz alta">🔊<small>Repetir</small></button>
+    <button class="ic help" id="help">¡Ayuda!</button>
+  </div>
+  <main id="screen"></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+{
+const face=(m,c)=>{const M={contenta:'M34 62 Q50 76 66 62',tranquila:'M36 63 Q50 72 64 63',triste:'M34 70 Q50 58 66 70',enojada:'M34 70 Q50 60 66 70',asustada:'',cansada:'M38 66 L62 66',confundida:'M34 66 Q42 60 50 66 Q58 72 66 66',preocupada:'M36 69 Q50 63 64 69',poco:'M36 63 Q50 72 64 63',bastante:'M36 66 L64 66',mucho:'M34 72 Q50 58 66 72'};
+const brow={enojada:'<path d="M28 34 L44 40 M72 34 L56 40" stroke="#222" stroke-width="5" stroke-linecap="round"/>',preocupada:'<path d="M30 38 L44 33 M70 38 L56 33" stroke="#222" stroke-width="4" stroke-linecap="round"/>',mucho:'<path d="M28 36 L44 40 M72 36 L56 40" stroke="#222" stroke-width="4" stroke-linecap="round"/>'}[m]||'';
+const eyes=m==='cansada'||m==='tranquila'?'<path d="M32 46 Q38 50 44 46 M56 46 Q62 50 68 46" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round"/>':m==='asustada'?'<circle cx="38" cy="45" r="7" fill="#fff" stroke="#222" stroke-width="3"/><circle cx="62" cy="45" r="7" fill="#fff" stroke="#222" stroke-width="3"/><circle cx="38" cy="45" r="3" fill="#222"/><circle cx="62" cy="45" r="3" fill="#222"/>':'<circle cx="38" cy="46" r="5" fill="#222"/><circle cx="62" cy="46" r="5" fill="#222"/>';
+const mouth=m==='asustada'?'<ellipse cx="50" cy="68" rx="8" ry="10" fill="#222"/>':`<path d="${M[m]}" stroke="#222" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+const tear=m==='triste'?'<path d="M64 54 q4 8 0 11 q-4 -3 0 -11z" fill="#4dabf7"/>':'';
+return `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" fill="${c||'#ffd43b'}" stroke="#222" stroke-width="3"/>${brow}${eyes}${mouth}${tear}</svg>`};
+
+const CATS={
+ sentir:{t:'Me siento',c:'--feel',items:[['Contenta','f:contenta:#ffd43b'],['Triste','f:triste:#a5d8ff'],['Enojada','f:enojada:#ff8787'],['Cansada','f:cansada:#ced4da'],['Asustada','f:asustada:#d0bfff',2],['Confundida','f:confundida:#96f2d7',2],['Preocupada','f:preocupada:#ffc078',2],['Tranquila','f:tranquila:#b2f2bb',2]]},
+ necesito:{t:'Necesito',c:'--need',items:[['Tengo sed','🥤'],['Tengo hambre','🍽️'],['Quiero ir al baño','🚽'],['Tengo frío','🧣'],['Tengo calor','☀️'],['Quiero dormir','🛏️'],['Acomodarme','🔄',2],['Mis anteojos','👓',2],['El teléfono','📱',2],['La tele','📺',2],['La luz','💡',2],['Mis remedios','💊',2]]},
+ personas:{t:'Quiero ver a…',c:'--ppl',note:'Nombres de ejemplo: después van los nombres reales y fotos de la familia.',items:[['Mi hijo','👨'],['Mi hija','👩'],['Mi esposo','👴'],['Mis nietos','🧒'],['Mi hermana','👵'],['La enfermera','👩‍⚕️'],['El médico','🩺'],['Una amiga','💐']]},
+ frases:{t:'Frases',c:'--fra',items:[['Gracias','🙏'],['Te quiero','❤️'],['Estoy bien','👌'],['No entiendo','❓'],['Más despacio','🐢'],['Esperá','✋'],['Quiero descansar','😌'],['¿Qué día es hoy?','📅'],['Quiero ir a casa','🏠'],['No estoy segura','〰️']]}
+};
+const MAIN=[['dolor','Dolor','🤕','--pain'],['sentir','Me siento','f:contenta:#ffd43b','--feel'],['necesito','Necesito','🙋‍♀️','--need'],['personas','Personas','👨‍👩‍👧','--ppl',3],['frases','Frases','💬','--fra',3]];
+const LVINFO={1:'Nivel 1: Sí / No y lo esencial (dolor de frente, 4 sentimientos, 6 necesidades), con botones extra grandes.',2:'Nivel 2: suma "No sé", más sentimientos y necesidades, dolor de espaldas y zonas como garganta u ojos.',3:'Nivel 3: todo, incluidas Personas y Frases.'};
+
+const $=s=>document.querySelector(s),scr=$('#screen'),ph=$('#phrase');
+let lvl=1,rate=.9,voices=[],voiceName='',last='';
+const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem('hablemos-'+k);localStorage.setItem('hablemos-'+k,v)}catch(e){return null}};
+voiceName=store('voz')||'';
+const icon=v=>v.startsWith('f:')?face(...v.slice(2).split(':')):`<span class="e" aria-hidden="true">${v}</span>`;
+const tile=(label,ic,col,attrs='',cls='')=>`<button class="t ${cls}" style="background:var(${col})" ${attrs}>${icon(ic)}<span>${label}</span></button>`;
+
+const loadVoices=()=>{try{voices=speechSynthesis.getVoices().filter(v=>/^es/i.test(v.lang));const sel=$('#voz');sel.innerHTML='<option value="">Automática</option>'+voices.map(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=`${v.name} (${v.lang})`;return o.outerHTML}).join('');sel.value=voices.some(v=>v.name===voiceName)?voiceName:''}catch(e){}};
+const pick=()=>voices.find(v=>v.name===voiceName)||voices.find(v=>/es[-_](AR|419|US|MX)/i.test(v.lang))||voices[0];
+const toast=t=>{const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('show'),2600)};
+const show=t=>{ph.textContent=t;ph.classList.remove('idle','flash');void ph.offsetWidth;ph.classList.add('flash');last=t};
+const say=t=>{show(t);try{const s=window.speechSynthesis;s.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='es-AR';u.rate=rate;const v=pick();if(v)u.voice=v;s.speak(u)}catch(e){toast('Este navegador no puede hablar: el mensaje queda escrito arriba')}};
+try{loadVoices();speechSynthesis.onvoiceschanged=loadVoices}catch(e){}
+
+const home=()=>{scr.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px">
+ <div class="yn">${tile('Sí','👍','--yes','data-say="Sí"','yes')}${tile('No sé','🤷‍♀️','--unk','data-say="No sé"','unk')}${tile('No','👎','--no','data-say="No"','no')}</div>
+ <div class="grid">${MAIN.filter(m=>(m[4]||1)<=lvl).map(([k,l,i,c])=>tile(l,i,c,`data-go="${k}" data-say="${l}"`,'cat')).join('')}</div></div>`};
+
+const list=k=>{const C=CATS[k],items=C.items.filter(it=>(it[2]||1)<=lvl);
+ scr.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px"><div class="head"><button class="back" data-go="home">← Inicio</button><h1>${C.t}</h1></div>
+ ${C.note?`<p class="note">${C.note}</p>`:''}<div class="grid">${items.map(([l,i])=>tile(l,i,C.c,`data-say="${l}"`)).join('')}</div></div>`};
+
+const FRONT=[['cabeza','la cabeza','<circle cx="100" cy="40" r="26"/>'],['cuello','el cuello','<rect x="89" y="66" width="22" height="16" rx="4"/>'],['hd','el hombro derecho','<ellipse cx="64" cy="94" rx="17" ry="12"/>'],['hi','el hombro izquierdo','<ellipse cx="136" cy="94" rx="17" ry="12"/>'],['pecho','el pecho','<rect x="74" y="86" width="52" height="52" rx="10"/>'],['panza','la panza','<rect x="75" y="140" width="50" height="50" rx="10"/>'],['bd','el brazo derecho','<rect x="40" y="108" width="22" height="82" rx="11"/>'],['bi','el brazo izquierdo','<rect x="138" y="108" width="22" height="82" rx="11"/>'],['md','la mano derecha','<circle cx="51" cy="204" r="13"/>'],['mi','la mano izquierda','<circle cx="149" cy="204" r="13"/>'],['pd','la pierna derecha','<rect x="75" y="193" width="23" height="146" rx="11"/>'],['pi','la pierna izquierda','<rect x="102" y="193" width="23" height="146" rx="11"/>'],['fd','el pie derecho','<ellipse cx="84" cy="352" rx="17" ry="10"/>'],['fi','el pie izquierdo','<ellipse cx="116" cy="352" rx="17" ry="10"/>']];
+const BACKN={cuello:'la nuca',pecho:'la espalda',panza:'la cintura'};
+const swap=s=>s.replace('derech','@').replace('izquierd','derech').replace('@','izquierd');
+const EXTRA=['la garganta','los ojos','la boca','los oídos','la panza al comer','todo el cuerpo'];
+let view='frente',where='';
+
+const pain=()=>{if(lvl<2)view='frente';const back=view==='espalda',parts=FRONT.map(([id,n,shape])=>{let name=back?(BACKN[id]||(/derech|izquierd/.test(n)?swap(n):n)):n;return `<g class="part${where===name?' sel':''}" data-part="${name}" role="button" aria-label="${name}">${shape}</g>`}).join('');
+ const lv=[['Poco','poco','l1'],['Bastante','bastante','l2'],['Mucho','mucho','l3']];
+ scr.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px"><div class="head"><button class="back" data-go="home">← Inicio</button><h1>¿Dónde te duele?</h1></div>
+ <div class="pain"><div class="bodybox">${lvl>=2?`<div class="seg" id="view"><button data-v="frente" aria-pressed="${!back}">De frente</button><button data-v="espalda" aria-pressed="${back}">De espaldas</button></div>`:''}
+ <svg viewBox="0 0 200 372" aria-label="Figura humana ${view}">${parts}<text class="side" x="${back?150:50}" y="18" text-anchor="middle">derecha</text><text class="side" x="${back?50:150}" y="18" text-anchor="middle">izquierda</text></svg></div>
+ <div class="lvl">${lvl>=2?`<div class="chips">${EXTRA.map(e=>`<button class="chip${where===e?' sel':''}" data-part="${e}">${e[0].toUpperCase()+e.slice(1)}</button>`).join('')}</div>`:''}
+ <h2>¿Cuánto duele?</h2><div class="lv">${lv.map(([l,f,c])=>tile(l,'f:'+f+':#fff',c==='l1'?'--yes':c==='l3'?'--no':'--help',`data-lvl="${l}"`,c)).join('')}</div>
+ <p class="note">${where?'Tocá cuánto le duele '+where+'.':'Primero tocá en la figura dónde duele.'}</p></div></div></div>`};
+
+const go=k=>{scr.dataset.v=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else list(k);window.scrollTo(0,0)};
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-l],[data-v],[data-part],[data-lvl],[data-go],[data-say]');if(!b)return;
+ if(b.dataset.l){setLvl(+b.dataset.l);return}
+ if(b.dataset.v){view=b.dataset.v;pain();return}
+ if(b.dataset.part){where=b.dataset.part;say('Me duele '+where);pain();return}
+ if(b.dataset.lvl){const l=b.dataset.lvl.toLowerCase();say(where?`Me duele ${where}, ${l}`:`Me duele ${l}`);return}
+ if(b.dataset.say)say(b.dataset.say);
+ if(b.dataset.go)go(b.dataset.go);
+});
+$('#rep').onclick=()=>last?say(last):say('Tocá un botón');
+$('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.')};
+$('#voz').onchange=e=>{voiceName=e.target.value;store('voz',voiceName);say('Hola')};
+$('#vel').onchange=e=>{rate=+e.target.value;store('vel',rate);say('Así hablo')};
+const setLvl=n=>{lvl=n;document.body.dataset.lvl=n;store('nivel',n);$('#lvinfo').textContent=LVINFO[n];document.querySelectorAll('#lvls button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.l===n));const v=scr.dataset.v||'home';if(v==='dolor')pain();else go(v)};
+$('#hc').onchange=e=>{document.body.dataset.hc=e.target.checked?'1':'0';store('hc',e.target.checked?'1':'0')};
+const sl=+store('nivel'),sv=store('vel'),sh=store('hc');
+if(sv){rate=+sv;$('#vel').value=sv}
+if(sh==='1'){$('#hc').checked=true;document.body.dataset.hc='1'}
+scr.dataset.v='home';setLvl([1,2,3].includes(sl)?sl:1);
+
+/* Pantalla siempre prendida (para que la tablet no se apague al lado de la cama) */
+let lock=null;
+const wantAwake=()=>$('#awake').checked;
+const keepAwake=async()=>{if(!wantAwake()||lock||document.visibilityState!=='visible')return;try{lock=await navigator.wakeLock.request('screen');lock.addEventListener('release',()=>{lock=null})}catch(e){}};
+if(store('awake')==='0')$('#awake').checked=false;
+$('#awake').onchange=e=>{store('awake',e.target.checked?'1':'0');if(e.target.checked)keepAwake();else if(lock){lock.release();lock=null}};
+document.addEventListener('visibilitychange',keepAwake);
+document.addEventListener('click',keepAwake);
+keepAwake();
+}
+/* Guarda la app en la tablet para que ande sin internet */
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
