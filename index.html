@@ -77,6 +77,15 @@ button,select{font:inherit;color:inherit}
 .l1{background:#2f9e44}.l2{background:#e0a100;color:#1d1400!important}.l3{background:#c92a2a}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
+/* Editor de personas */
+.pbtn{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 14px;min-height:36px;cursor:pointer;font-weight:700}
+.pl{display:flex;flex-direction:column;gap:10px}
+.prow{display:flex;gap:10px;align-items:center}
+.prow select{font-size:30px;padding:4px 6px;border-radius:14px;border:2px solid var(--line);background:var(--bg);min-height:62px}
+.prow input{flex:1;font:inherit;font-size:22px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);min-height:62px;-webkit-user-select:text;user-select:text}
+.prow input:focus{outline:3px solid var(--ppl);outline-offset:1px}
+.pdel{border:2px solid var(--line);background:var(--bg);border-radius:14px;min-height:62px;width:62px;font-size:24px;cursor:pointer;flex:none}
+.pacts{display:flex;flex-wrap:wrap;gap:10px}
 .lvinfo{flex-basis:100%;margin:0;font-size:13px;color:color-mix(in srgb,var(--ink) 70%,transparent)}
 /* Nivel 1: lo esencial, botones más grandes */
 [data-lvl="1"] .unk{display:none}
@@ -98,6 +107,7 @@ button,select{font:inherit;color:inherit}
     <button data-l="2" aria-pressed="false">Nivel 2 · Intermedio</button>
     <button data-l="3" aria-pressed="false">Nivel 3 · Completo</button>
   </div>
+  <button class="pbtn" id="editp">✏️ Editar personas</button>
   <label><input type="checkbox" id="hc"> Alto contraste</label>
   <label><input type="checkbox" id="awake" checked> Pantalla siempre prendida</label>
   <label>Voz <select id="voz"><option value="">Automática</option></select></label>
@@ -125,7 +135,7 @@ return `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r=
 const CATS={
  sentir:{t:'Me siento',c:'--feel',items:[['Contenta','f:contenta:#ffd43b'],['Triste','f:triste:#a5d8ff'],['Enojada','f:enojada:#ff8787'],['Cansada','f:cansada:#ced4da'],['Asustada','f:asustada:#d0bfff',2],['Confundida','f:confundida:#96f2d7',2],['Preocupada','f:preocupada:#ffc078',2],['Tranquila','f:tranquila:#b2f2bb',2]]},
  necesito:{t:'Necesito',c:'--need',items:[['Tengo sed','🥤'],['Tengo hambre','🍽️'],['Quiero ir al baño','🚽'],['Tengo frío','🧣'],['Tengo calor','☀️'],['Quiero dormir','🛏️'],['Acomodarme','🔄',2],['Mis anteojos','👓',2],['El teléfono','📱',2],['La tele','📺',2],['La luz','💡',2],['Mis remedios','💊',2]]},
- personas:{t:'Quiero ver a…',c:'--ppl',note:'Nombres de ejemplo: después van los nombres reales y fotos de la familia.',items:[['Mi hijo','👨'],['Mi hija','👩'],['Mi esposo','👴'],['Mis nietos','🧒'],['Mi hermana','👵'],['La enfermera','👩‍⚕️'],['El médico','🩺'],['Una amiga','💐']]},
+ personas:{t:'Quiero ver a…',c:'--ppl',note:'Para poner los nombres de la familia: ⚙ Ajustes → Editar personas.',items:[['Mi hijo','👨'],['Mi hija','👩'],['Mi esposo','👴'],['Mis nietos','🧒'],['Mi hermana','👵'],['La enfermera','👩‍⚕️'],['El médico','🩺'],['Una amiga','💐']]},
  frases:{t:'Frases',c:'--fra',items:[['Gracias','🙏'],['Te quiero','❤️'],['Estoy bien','👌'],['No entiendo','❓'],['Más despacio','🐢'],['Esperá','✋'],['Quiero descansar','😌'],['¿Qué día es hoy?','📅'],['Quiero ir a casa','🏠'],['No estoy segura','〰️']]}
 };
 const MAIN=[['dolor','Dolor','🤕','--pain'],['sentir','Me siento','f:contenta:#ffd43b','--feel'],['necesito','Necesito','🙋‍♀️','--need'],['personas','Personas','👨‍👩‍👧','--ppl',3],['frases','Frases','💬','--fra',3]];
@@ -149,9 +159,23 @@ const home=()=>{scr.innerHTML=`<div style="display:flex;flex-direction:column;ga
  <div class="yn">${tile('Sí','👍','--yes','data-say="Sí"','yes')}${tile('No sé','🤷‍♀️','--unk','data-say="No sé"','unk')}${tile('No','👎','--no','data-say="No"','no')}</div>
  <div class="grid">${MAIN.filter(m=>(m[4]||1)<=lvl).map(([k,l,i,c])=>tile(l,i,c,`data-go="${k}" data-say="${l}"`,'cat')).join('')}</div></div>`};
 
-const list=k=>{const C=CATS[k],items=C.items.filter(it=>(it[2]||1)<=lvl);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const list=k=>{const C=CATS[k],items=C.items.filter(it=>(it[2]||1)<=lvl&&String(it[0]).trim());
  scr.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px"><div class="head"><button class="back" data-go="home">← Inicio</button><h1>${C.t}</h1></div>
- ${C.note?`<p class="note">${C.note}</p>`:''}<div class="grid">${items.map(([l,i])=>tile(l,i,C.c,`data-say="${l}"`)).join('')}</div></div>`};
+ ${C.note?`<p class="note">${C.note}</p>`:''}<div class="grid">${items.map(([l,i])=>tile(esc(l),i,C.c,`data-say="${esc(l)}"`)).join('')}</div></div>`};
+
+/* Personas: la familia escribe los nombres en la tablet (quedan guardados en esta tablet) */
+const DEF_PERS=CATS.personas.items.map(x=>[...x]);
+const EMOS=['👨','👩','👴','👵','🧒','👦','👧','👶','👨‍⚕️','👩‍⚕️','🩺','💐','🐶','🐱','🙂','❤️'];
+try{const p=JSON.parse(store('personas')||'null');if(Array.isArray(p))CATS.personas.items=p.filter(x=>Array.isArray(x)).map(x=>[String(x[0]||''),String(x[1]||'🙂')])}catch(e){}
+const savePers=()=>store('personas',JSON.stringify(CATS.personas.items));
+const prow=([n,e],i)=>`<div class="prow"><select data-pemo="${i}" aria-label="Dibujito">${(EMOS.includes(e)?EMOS:[e,...EMOS]).map(x=>`<option${x===e?' selected':''}>${x}</option>`).join('')}</select><input data-pname="${i}" value="${esc(n)}" placeholder="Nombre (ej.: Mi hijo Juan)" maxlength="40" autocomplete="off"><button class="pdel" data-pdel="${i}" aria-label="Borrar">🗑</button></div>`;
+const editPers=()=>{scr.innerHTML=`<div style="display:flex;flex-direction:column;gap:14px"><div class="head"><button class="back" data-go="personas">✓ Listo</button><h1>Editar personas</h1></div>
+ <p class="note">Escribí cada nombre como querés que la tablet lo diga (por ejemplo "Mi hijo Juan" o "Laura"). Se guarda solo, en esta tablet. Personas aparece en el Nivel 3.</p>
+ <div class="pl">${CATS.personas.items.map(prow).join('')}</div>
+ <div class="pacts"><button class="back" data-padd>+ Agregar persona</button><button class="back" data-preset>Volver a los de ejemplo</button></div></div>`};
+scr.addEventListener('input',e=>{const i=e.target.dataset.pname;if(i!==undefined){CATS.personas.items[+i][0]=e.target.value;savePers()}});
+scr.addEventListener('change',e=>{const i=e.target.dataset.pemo;if(i!==undefined){CATS.personas.items[+i][1]=e.target.value;savePers()}});
 
 const FRONT=[['cabeza','la cabeza','<circle cx="100" cy="40" r="26"/>'],['cuello','el cuello','<rect x="89" y="66" width="22" height="16" rx="4"/>'],['hd','el hombro derecho','<ellipse cx="64" cy="94" rx="17" ry="12"/>'],['hi','el hombro izquierdo','<ellipse cx="136" cy="94" rx="17" ry="12"/>'],['pecho','el pecho','<rect x="74" y="86" width="52" height="52" rx="10"/>'],['panza','la panza','<rect x="75" y="140" width="50" height="50" rx="10"/>'],['bd','el brazo derecho','<rect x="40" y="108" width="22" height="82" rx="11"/>'],['bi','el brazo izquierdo','<rect x="138" y="108" width="22" height="82" rx="11"/>'],['md','la mano derecha','<circle cx="51" cy="204" r="13"/>'],['mi','la mano izquierda','<circle cx="149" cy="204" r="13"/>'],['pd','la pierna derecha','<rect x="75" y="193" width="23" height="146" rx="11"/>'],['pi','la pierna izquierda','<rect x="102" y="193" width="23" height="146" rx="11"/>'],['fd','el pie derecho','<ellipse cx="84" cy="352" rx="17" ry="10"/>'],['fi','el pie izquierdo','<ellipse cx="116" cy="352" rx="17" ry="10"/>']];
 const BACKN={cuello:'la nuca',pecho:'la espalda',panza:'la cintura'};
@@ -168,10 +192,16 @@ const pain=()=>{if(lvl<2)view='frente';const back=view==='espalda',parts=FRONT.m
  <h2>¿Cuánto duele?</h2><div class="lv">${lv.map(([l,f,c])=>tile(l,'f:'+f+':#fff',c==='l1'?'--yes':c==='l3'?'--no':'--help',`data-lvl="${l}"`,c)).join('')}</div>
  <p class="note">${where?'Tocá cuánto le duele '+where+'.':'Primero tocá en la figura dónde duele.'}</p></div></div></div>`};
 
-const go=k=>{scr.dataset.v=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else list(k);window.scrollTo(0,0)};
+const go=k=>{scr.dataset.v=k;if(k==='home')home();else if(k==='dolor'){where='';pain()}else if(k==='editpers')editPers();else list(k);window.scrollTo(0,0)};
 
 document.addEventListener('click',e=>{
- const b=e.target.closest('[data-l],[data-v],[data-part],[data-lvl],[data-go],[data-say]');if(!b)return;
+ const p=e.target.closest('[data-padd],[data-pdel],[data-preset]');
+ if(p){const P=CATS.personas.items;
+  if(p.dataset.padd!==undefined){P.push(['','🙂']);savePers();editPers();const ins=scr.querySelectorAll('[data-pname]');ins[ins.length-1].focus()}
+  else if(p.dataset.pdel!==undefined){const i=+p.dataset.pdel;if(!P[i][0].trim()||confirm(`¿Borrar a "${P[i][0]}"?`)){P.splice(i,1);savePers();editPers()}}
+  else if(confirm('¿Volver a los nombres de ejemplo? Se borran los que escribieron.')){CATS.personas.items=DEF_PERS.map(x=>[...x]);savePers();editPers()}
+  return}
+ const b=e.target.closest('[data-l],[data-v],[data-part],[data-lvl],[data-go],[data-say]');if(!b||b===document.body)return;
  if(b.dataset.l){setLvl(+b.dataset.l);return}
  if(b.dataset.v){view=b.dataset.v;pain();return}
  if(b.dataset.part){where=b.dataset.part;say('Me duele '+where);pain();return}
@@ -179,6 +209,7 @@ document.addEventListener('click',e=>{
  if(b.dataset.say)say(b.dataset.say);
  if(b.dataset.go)go(b.dataset.go);
 });
+$('#editp').onclick=()=>{$('#ajustes').open=false;go('editpers')};
 $('#rep').onclick=()=>last?say(last):say('Tocá un botón');
 $('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.')};
 $('#voz').onchange=e=>{voiceName=e.target.value;store('voz',voiceName);say('Hola')};
