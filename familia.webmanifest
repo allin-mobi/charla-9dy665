@@ -1,0 +1,17 @@
+{
+  "name": "Hablemos · Familia",
+  "short_name": "Hablemos fam.",
+  "description": "Mensajes con la tablet de Hablemos y avisos de ¡Ayuda!",
+  "id": "./familia.html",
+  "lang": "es",
+  "start_url": "./familia.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#a15c07",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

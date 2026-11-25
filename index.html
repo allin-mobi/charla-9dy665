@@ -159,6 +159,7 @@ button,select{font:inherit;color:inherit}
   <button class="pbtn" id="editp">✏️ Editar personas</button>
   <label>Mi nombre en los mensajes <input type="text" id="yo" maxlength="30" autocomplete="off"></label>
   <button class="pbtn" id="famlink">📲 Link para la familia</button>
+  <label><input type="checkbox" id="ayudafam" checked> ¡Ayuda! avisa al celular de la familia</label>
   <label><input type="checkbox" id="hc"> Alto contraste</label>
   <label><input type="checkbox" id="awake" checked> Pantalla siempre prendida</label>
   <label>Voz <select id="voz"><option value="">Automática</option></select></label>
@@ -335,7 +336,9 @@ const showMsg=m=>{ovMsg=m;const ov=$('#mov');
  <div class="mbtns"><button data-m="rep">🔊 Repetir</button><button class="si" data-m="si">👍 Sí</button><button class="no" data-m="no">👎 No</button><button class="re" data-m="esc">⌨️ Responder</button><button data-m="ok">✓ Listo</button></div></div>`;
  ov.classList.add('show');chime();setTimeout(()=>readMsg(m),900)};
 const closeMsg=()=>{$('#mov').classList.remove('show');ovMsg=null;unseen=0;saveMsgs();badge()};
-const sendMsg=t=>rpc('hab_enviar',{p_sala:sala,p_de:yo(),p_texto:t}).then(id=>{if(!msgs.some(m=>m.id===id))msgs.push({id,de:yo(),texto:t,t:new Date().toISOString(),mio:true});saveMsgs();if(scr.dataset.view==='mensajes')go('mensajes');toast('Enviado a la familia ✓')}).catch(()=>toast('No se pudo mandar: revisá el Wi‑Fi'));
+const FN='https://hsxxdixhwvunierirxgs.supabase.co/functions/v1/smart-task';
+const avisar=(id,urgente)=>fetch(FN,{method:'POST',headers:{apikey:SBK,'Content-Type':'application/json'},body:JSON.stringify({sala,id,urgente:!!urgente})}).catch(()=>{});
+const sendMsg=(t,urgente)=>rpc('hab_enviar',{p_sala:sala,p_de:yo(),p_texto:t}).then(id=>{avisar(id,urgente);if(!msgs.some(m=>m.id===id))msgs.push({id,de:yo(),texto:t,t:new Date().toISOString(),mio:true});saveMsgs();if(scr.dataset.view==='mensajes')go('mensajes');toast(urgente?'Aviso de ayuda enviado a la familia ✓':'Enviado a la familia ✓')}).catch(()=>toast(urgente?'No se pudo avisar a la familia: revisá el Wi‑Fi':'No se pudo mandar: revisá el Wi‑Fi'));
 const poll=async()=>{if(polling||navigator.onLine===false)return;polling=true;
  try{const first=!msgs.length,desde=msgs.reduce((a,m)=>Math.max(a,m.id||0),0);
   const r=await rpc('hab_leer',{p_sala:sala,p_desde:desde}),fam=[];
@@ -393,7 +396,10 @@ $('#famlink').onclick=async()=>{const url=new URL('familia.html#'+sala,location.
  try{await navigator.clipboard.writeText(url);toast('Link copiado: pegalo en WhatsApp')}catch(e){prompt('Copiá este link y mandalo a la familia:',url)}};
 $('#editp').onclick=()=>{$('#ajustes').open=false;go('editpers')};
 $('#rep').onclick=()=>last?say(last):say('Tocá un botón');
-$('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.')};
+$('#help').onclick=()=>{try{const A=new (window.AudioContext||window.webkitAudioContext)();[0,.35,.7].forEach(t=>{const o=A.createOscillator(),g=A.createGain();o.frequency.value=880;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+t+.3);o.start(A.currentTime+t);o.stop(A.currentTime+t+.3)})}catch(e){}setTimeout(()=>say('¡Necesito ayuda! Vení, por favor.'),1100);show('¡Necesito ayuda! Vení, por favor.');
+ if(store('ayudafam')!=='0'){const ahora=Date.now();if(ahora-(+store('ultayuda')||0)>60000){store('ultayuda',String(ahora));sendMsg('¡Necesito ayuda! Vení, por favor.',true)}else toast('La familia ya fue avisada hace un momento')}};
+if(store('ayudafam')==='0')$('#ayudafam').checked=false;
+$('#ayudafam').onchange=e=>store('ayudafam',e.target.checked?'1':'0');
 $('#voz').onchange=e=>{voiceName=e.target.value;store('voz',voiceName);say('Hola')};
 $('#vel').onchange=e=>{rate=+e.target.value;store('vel',rate);say('Así hablo')};
 const setLvl=n=>{lvl=n;document.body.dataset.lvl=n;store('nivel',n);$('#lvinfo').textContent=LVINFO[n];document.querySelectorAll('#lvls button').forEach(x=>x.setAttribute('aria-pressed',+x.dataset.l===n));const v=scr.dataset.view||'home';if(v==='dolor')pain();else go(v)};

@@ -6,6 +6,9 @@
 <title>Hablemos · Familia</title>
 <meta name="theme-color" content="#a15c07">
 <meta name="robots" content="noindex">
+<link rel="manifest" href="familia.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hablemos fam.">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,12 +42,16 @@ textarea:focus{outline:none;border-color:var(--msg)}
 .card h2{margin:0;font-size:22px}
 .card input{padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);font-size:18px}
 .card button{border:0;border-radius:14px;background:var(--msg);color:#fff;font-weight:700;min-height:50px;font-size:18px;cursor:pointer}
+.avbar{margin:10px 16px 0;padding:12px 14px;border-radius:16px;background:color-mix(in srgb,var(--msg) 14%,var(--bg));border:2px solid var(--msg);display:flex;flex-direction:column;gap:8px}
+.avbar p{margin:0;font-size:15px}
+.avbar button{align-self:flex-start;border:0;border-radius:12px;background:var(--msg);color:#fff;font-weight:700;padding:10px 16px;cursor:pointer}
+.avbar .x{background:transparent;color:inherit;padding:4px 0;font-weight:400;text-decoration:underline}
 .estado{font-size:12px;text-align:center;opacity:.7;padding:2px}
 .estado.mal{color:var(--no);opacity:1}
 </style>
 </head>
 <body>
-<header><h1 id="tit">✉️ Hablemos · Mensajes</h1><button id="cambiar" hidden>Mi nombre</button></header>
+<header><h1 id="tit">✉️ Hablemos · Mensajes</h1><button id="avisos" hidden>🔔 Avisos</button><button id="cambiar" hidden>Mi nombre</button></header>
 <main id="app" style="flex:1;display:flex;flex-direction:column;min-height:0"></main>
 <script>
 const SB='https://hsxxdixhwvunierirxgs.supabase.co/rest/v1/rpc/',SBK='sb_publishable_avQ3-r13fxmHEZBCrEIdoQ_m1BankVb';
@@ -52,7 +59,9 @@ const rpc=(f,b)=>fetch(SB+f,{method:'POST',headers:{apikey:SBK,'Content-Type':'a
 const st=(k,v)=>{try{if(v===undefined)return localStorage.getItem('hab-fam-'+k);localStorage.setItem('hab-fam-'+k,v)}catch(e){return null}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hora=t=>new Date(t).toLocaleString('es-AR',{weekday:'short',hour:'2-digit',minute:'2-digit'});
-const app=document.getElementById('app'),sala=(location.hash||'').slice(1);
+const app=document.getElementById('app'),hashSala=(location.hash||'').slice(1);
+if(hashSala.length>=20)st('sala',hashSala);   // así el ícono instalado (sin el código en el link) sigue sabiendo cuál es la sala
+const sala=hashSala.length>=20?hashSala:(st('sala')||'');
 let msgs=[],mios=new Set(JSON.parse(st('mios')||'[]')),busy=false,nuevosOcultos=0;
 const nombre=()=>(st('nombre')||'').trim();
 
@@ -84,7 +93,7 @@ const enviar=async t=>{t=t.trim();if(!t)return false;
  catch(e){estado('No se pudo mandar. Revisá la conexión y probá de nuevo.',true);return false}};
 
 const chat=()=>{document.getElementById('cambiar').hidden=false;
- app.innerHTML=`<div id="list"></div><div class="estado" id="estado"></div>
+ app.innerHTML=`<div id="avslot"></div><div id="list"></div><div class="estado" id="estado"></div>
  <div class="quick">${['Te quiero ❤️','¿Cómo estás?','Ya voy para allá','Todo bien','Mañana te visito'].map(q=>`<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
  <form id="fm"><textarea id="tx" maxlength="1000" placeholder="Escribile un mensaje…" rows="1"></textarea><button class="send" id="bs">Enviar</button></form>`;
  const tx=document.getElementById('tx'),bs=document.getElementById('bs');
@@ -93,7 +102,32 @@ const chat=()=>{document.getElementById('cambiar').hidden=false;
  tx.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!/Android|iPhone|iPad/i.test(navigator.userAgent)){e.preventDefault();document.getElementById('fm').requestSubmit()}};
  tx.oninput=()=>{tx.style.height='';tx.style.height=Math.min(tx.scrollHeight,140)+'px'};
  document.querySelector('.quick').onclick=e=>{const b=e.target.closest('[data-q]');if(b)mandar(b.dataset.q)};
- pintar.primera=true;pintar();traer()};
+ pintar.primera=true;pintar();traer();avisosUI()};
+
+/* ===== Avisos en el celular (push): suenan aunque la página esté cerrada ===== */
+const VAPID='BCv5NAfisKyhxYGXuukr0ETwCE4d8iGW7LJMdoBTBnt9nX4wj4CLpPT68imhgj_USh14kq3k9-8ehVNDzUitSyg';
+const puede=()=>'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window;
+const esIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent),instalada=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+const b64=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');const r=atob(s+'='.repeat((4-s.length%4)%4));return Uint8Array.from(r,c=>c.charCodeAt(0))};
+const reg=()=>navigator.serviceWorker.register('sw.js').then(()=>navigator.serviceWorker.ready);
+const activos=async()=>{if(!puede()||Notification.permission!=='granted')return false;try{const r=await reg();return !!(await r.pushManager.getSubscription())}catch(e){return false}};
+const activar=async()=>{
+ if(!puede()){alert(esIOS&&!instalada?'En iPhone primero hay que instalarla: tocá Compartir (el cuadrado con la flecha) → "Agregar a inicio". Después abrila desde ese ícono y tocá de nuevo "Activar avisos".':'Este navegador no puede recibir avisos. Probá abriendo el link con Chrome.');return}
+ const perm=await Notification.requestPermission();
+ if(perm!=='granted'){alert('Los avisos quedaron bloqueados. Para activarlos: tocá el candado junto a la dirección → Notificaciones → Permitir, y probá de nuevo.');return}
+ try{const r=await reg();let sub=await r.pushManager.getSubscription();
+  if(!sub)sub=await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID)});
+  const j=sub.toJSON();await rpc('hab_suscribir',{p_sala:sala,p_endpoint:j.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_nombre:nombre()});
+  st('avisos','1');avisosUI();alert('Listo: los avisos de la tablet (y el ¡Ayuda!) te van a sonar en este celular.')}
+ catch(e){alert('No se pudieron activar los avisos. Revisá la conexión y probá de nuevo.')}};
+const desactivar=async()=>{if(!confirm('¿Dejar de recibir avisos en este celular? (los mensajes se siguen viendo acá)'))return;
+ try{const r=await reg(),sub=await r.pushManager.getSubscription();if(sub){await rpc('hab_desuscribir',{p_endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+ st('avisos','0');avisosUI()};
+const avisosUI=async()=>{const on=await activos(),btn=document.getElementById('avisos'),slot=document.getElementById('avslot');
+ btn.hidden=false;btn.textContent=on?'🔔 Avisos ✓':'🔕 Avisos';btn.onclick=on?desactivar:activar;
+ if(slot)slot.innerHTML=on||st('avisos')==='0'?'':`<div class="avbar"><p><b>🔔 Activá los avisos en este celular</b> para que te suene cuando ella te escriba o toque ¡Ayuda!, aunque esta página esté cerrada.</p>${esIOS&&!instalada?'<p>En iPhone: primero Compartir → "Agregar a inicio" y abrila desde ese ícono.</p>':''}<button id="avon">Activar avisos</button><button class="x" id="avno">Ahora no</button></div>`;
+ const a=document.getElementById('avon');if(a)a.onclick=activar;const n=document.getElementById('avno');if(n)n.onclick=()=>{st('avisos','0');avisosUI()}};
+if('serviceWorker' in navigator&&location.protocol==='https:')reg().catch(()=>{});
 
 document.getElementById('cambiar').onclick=pedirNombre;
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){nuevosOcultos=0;document.title='Hablemos · Familia';traer()}});
